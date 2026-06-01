@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard KPIs — PIL Perú 2021–2026</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh}
@@ -170,26 +169,24 @@ tbody tr:last-child td{border-bottom:none}
 .vs-val{font-size:17px;font-weight:700;color:#1a1a2e}
 .vs-delta{font-size:10px;margin-top:3px}
 
-/* ── Loading overlay ─────────────────────────────────────────────────────── */
+/* ── Sync bar ─────────────────────────────────────────────────────────────── */
 .sync-bar{background:#0f2d5e;border-radius:10px;padding:10px 20px;margin-bottom:14px;
   display:flex;align-items:center;gap:12px;color:#fff;font-size:12px;flex-wrap:wrap}
-.sync-dot{width:8px;height:8px;border-radius:50%;background:#10b981;flex-shrink:0;
-  animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
-.sync-dot.loading{background:#f59e0b;animation:spin 1s linear infinite}
-.sync-dot.error{background:#ef4444;animation:none}
-@keyframes spin{to{transform:rotate(360deg);border-radius:0}}
-.sync-label{font-weight:600;font-size:12px}
-.sync-time{font-size:11px;opacity:.7;margin-left:auto}
+.sync-dot{width:9px;height:9px;border-radius:50%;background:#10b981;flex-shrink:0}
+.sync-dot.spin{background:#f59e0b;animation:rot 1s linear infinite}
+.sync-dot.err{background:#ef4444}
+@keyframes rot{to{transform:rotate(360deg);border-radius:0}}
+.sync-label{font-weight:600;font-size:12px;flex:1}
+.sync-time{font-size:10px;opacity:.65}
 .sync-btn{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:6px;
-  padding:5px 12px;font-size:11px;cursor:pointer;font-weight:600;transition:background .15s}
+  padding:5px 12px;font-size:11px;cursor:pointer;font-weight:600}
 .sync-btn:hover{background:rgba(255,255,255,.25)}
-.overlay{position:fixed;inset:0;background:rgba(15,45,94,.85);z-index:9999;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
-.overlay-spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,.2);
-  border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite}
-.overlay-text{color:#fff;font-size:14px;font-weight:600}
-.overlay-sub{color:rgba(255,255,255,.6);font-size:12px}
+.overlay{position:fixed;inset:0;background:rgba(15,45,94,.88);z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.ov-spin{width:44px;height:44px;border:4px solid rgba(255,255,255,.2);
+  border-top-color:#fff;border-radius:50%;animation:rot .8s linear infinite}
+.ov-txt{color:#fff;font-size:14px;font-weight:600}
+.ov-sub{color:rgba(255,255,255,.6);font-size:12px}
 </style>
 </head>
 <body>
@@ -223,19 +220,16 @@ tbody tr:last-child td{border-bottom:none}
 </div>
 
 
-<div class="sync-bar" id="syncBar">
-  <div class="sync-dot loading" id="syncDot"></div>
-  <div>
-    <div class="sync-label" id="syncLabel">Cargando datos desde Google Sheets...</div>
-    <div class="sync-time" id="syncTime"></div>
-  </div>
-  <button class="sync-btn" onclick="loadAllSheets()" style="margin-left:auto">↻ Actualizar</button>
+<div class="overlay" id="ov">
+  <div class="ov-spin"></div>
+  <div class="ov-txt">Conectando con Google Sheets</div>
+  <div class="ov-sub">Cargando datos de PIL Perú...</div>
 </div>
-
-<div class="overlay" id="loadingOverlay">
-  <div class="overlay-spinner"></div>
-  <div class="overlay-text">Conectando con Google Sheets</div>
-  <div class="overlay-sub">Cargando datos de PIL Perú...</div>
+<div class="sync-bar" id="syncBar">
+  <div class="sync-dot spin" id="syncDot"></div>
+  <div class="sync-label" id="syncLbl">Cargando datos desde Google Sheets...</div>
+  <span class="sync-time" id="syncTime"></span>
+  <button class="sync-btn" onclick="loadAll()">↻ Actualizar</button>
 </div>
 <div class="tabs">
   <button class="tab on" onclick="switchTab('fb',this)">📘 Facebook</button>
@@ -1012,173 +1006,176 @@ function switchTab(tab,btn){
 function onYearChange(){populateMonths();render();}
 
 
-// ─── GOOGLE SHEETS AUTO-LOADER ────────────────────────────────────────────
-const SHEET_ID = "1x41r1rVgb9kWe1B5pjUzo1izuIkjJLZEI3PmvkdIldE";
+// ─── GOOGLE SHEETS LIVE LOADER ────────────────────────────────────────────
+const SID = "1x41r1rVgb9kWe1B5pjUzo1izuIkjJLZEI3PmvkdIldE";
 
-function sheetUrl(name){
-  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
+// Uses Google Visualization API query — works cross-origin without CORS issues
+function gvizUrl(sheetName) {
+  const encoded = encodeURIComponent(sheetName);
+  return `https://docs.google.com/spreadsheets/d/${SID}/gviz/tq?tqx=out:json&sheet=${encoded}`;
 }
 
-function normMonth(v){
+function fetchSheet(sheetName) {
+  return new Promise((resolve, reject) => {
+    const cbName = '_cb_' + Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+    const timeout = setTimeout(() => {
+      delete window[cbName];
+      document.head.removeChild(script);
+      reject(new Error('Timeout: ' + sheetName));
+    }, 15000);
+
+    window[cbName] = function(data) {
+      clearTimeout(timeout);
+      delete window[cbName];
+      try { document.head.removeChild(script); } catch(e){}
+      if(!data || !data.table) { reject(new Error('No data: ' + sheetName)); return; }
+      // Convert gviz table to array of rows
+      const cols = data.table.cols.length;
+      const rows = (data.table.rows || []).map(r =>
+        r.c.map(cell => (cell && cell.v !== undefined) ? cell.v : null)
+      );
+      resolve(rows);
+    };
+
+    // Inject JSONP callback name
+    script.src = gvizUrl(sheetName) + `&tqx=out:json;responseHandler:${cbName}`;
+    script.onerror = () => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      reject(new Error('Script error: ' + sheetName));
+    };
+    document.head.appendChild(script);
+  });
+}
+
+function n(v) {
+  if(v === null || v === undefined || v === '') return null;
+  const x = parseFloat(String(v).replace(/,/g,'.').replace(/[^\d.-]/g,''));
+  return isNaN(x) ? null : x;
+}
+
+function normM(v) {
   if(!v) return null;
   return String(v).toLowerCase().trim()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/\s+/g,'');
 }
 
-function fetchCSV(sheetName){
-  return new Promise((resolve, reject) => {
-    Papa.parse(sheetUrl(sheetName), {
-      download: true,
-      skipEmptyLines: true,
-      complete: r => resolve(r.data),
-      error: e => reject(e)
-    });
-  });
-}
-
-function parseNum(v){
-  if(v===null||v===undefined||v==='') return null;
-  const n = parseFloat(String(v).replace(/,/g,'.').replace(/[^0-9.-]/g,''));
-  return isNaN(n)?null:n;
-}
-
-async function loadAllSheets(){
-  const dot   = document.getElementById('syncDot');
-  const label = document.getElementById('syncLabel');
-  const overlay = document.getElementById('loadingOverlay');
-
-  dot.className   = 'sync-dot loading';
-  label.textContent = 'Actualizando datos...';
-  overlay.style.display = 'flex';
+async function loadAll() {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLbl');
+  const ov  = document.getElementById('ov');
+  dot.className = 'sync-dot spin';
+  lbl.textContent = 'Actualizando desde Google Sheets...';
+  ov.style.display = 'flex';
 
   try {
-    // ── Facebook ────────────────────────────────────────────────────────
-    const fbRows = await fetchCSV('📘 Facebook_KPIs');
-    fbRows.slice(3).forEach(r => {
-      const yr  = parseInt(r[0]);
-      const mes = normMonth(r[1]);
+    // ── Facebook ──────────────────────────────────────────────────────────
+    const fbR = await fetchSheet('📘 Facebook_KPIs');
+    fbR.slice(3).forEach(r => {
+      const yr = parseInt(r[0]), mes = normM(r[1]);
       if(!yr || !mes) return;
       if(!DATA.fb[yr]) DATA.fb[yr] = {};
-      DATA.fb[yr][mes] = {
-        seg:  parseNum(r[2]), imp:  parseNum(r[3]),
-        alc:  parseNum(r[4]), int:  parseNum(r[5]),
-        nseg: parseNum(r[6]), posts:parseNum(r[7])
-      };
+      DATA.fb[yr][mes] = {seg:n(r[2]),imp:n(r[3]),alc:n(r[4]),int:n(r[5]),nseg:n(r[6]),posts:n(r[7])};
     });
 
-    // ── LinkedIn ────────────────────────────────────────────────────────
-    const liRows = await fetchCSV('💼 LinkedIn_KPIs');
-    liRows.slice(3).forEach(r => {
-      const yr  = parseInt(r[0]);
-      const mes = normMonth(r[1]);
+    // ── LinkedIn ──────────────────────────────────────────────────────────
+    const liR = await fetchSheet('💼 LinkedIn_KPIs');
+    liR.slice(3).forEach(r => {
+      const yr = parseInt(r[0]), mes = normM(r[1]);
       if(!yr || !mes) return;
       if(!DATA.li[yr]) DATA.li[yr] = {};
-      DATA.li[yr][mes] = {
-        seg:  parseNum(r[2]), imp:  parseNum(r[3]),
-        alc:  parseNum(r[4]), int:  parseNum(r[5]),
-        nseg: parseNum(r[6]), posts:parseNum(r[7])
-      };
+      DATA.li[yr][mes] = {seg:n(r[2]),imp:n(r[3]),alc:n(r[4]),int:n(r[5]),nseg:n(r[6]),posts:n(r[7])};
     });
 
-    // ── Web Visitas ─────────────────────────────────────────────────────
-    const webRows = await fetchCSV('🌐 Web_Visitas');
-    const webHeader = webRows[1]; // ['Mes','2021','2022',...]
-    webRows.slice(2).forEach(r => {
-      const mes = normMonth(r[0]);
+    // ── Web Visitas ───────────────────────────────────────────────────────
+    const wR = await fetchSheet('🌐 Web_Visitas');
+    const wH = wR[1] || [];
+    wR.slice(2).forEach(r => {
+      const mes = normM(r[0]);
       if(!mes) return;
       [1,2,3,4,5,6].forEach(col => {
-        const yr = parseInt(webHeader[col]);
-        const val = parseNum(r[col]);
-        if(!yr || val===null) return;
+        const yr = parseInt(wH[col]);
+        const val = n(r[col]);
+        if(!yr || val === null) return;
         if(!WEB_VISITS[yr]) WEB_VISITS[yr] = {};
         WEB_VISITS[yr][mes] = val;
       });
     });
 
-    // ── GSC SearchConsole ───────────────────────────────────────────────
-    const gscRows = await fetchCSV('🔍 GSC_SearchConsole');
-    gscRows.slice(2).forEach(r => {
-      const yr  = parseInt(r[0]);
-      const mes = normMonth(r[1]);
+    // ── GSC ───────────────────────────────────────────────────────────────
+    const gR = await fetchSheet('🔍 GSC_SearchConsole');
+    gR.slice(2).forEach(r => {
+      const yr = parseInt(r[0]), mes = normM(r[1]);
       if(!yr || !mes) return;
       if(!WEB_GSC[yr]) WEB_GSC[yr] = {};
-      WEB_GSC[yr][mes] = {
-        clics: parseNum(r[2]), imp: parseNum(r[3]),
-        ctr:   parseNum(r[4]), posMedia: parseNum(r[5])
-      };
+      WEB_GSC[yr][mes] = {clics:n(r[2]),imp:n(r[3]),ctr:n(r[4]),posMedia:n(r[5])};
     });
 
-    // ── GA4 Analytics ───────────────────────────────────────────────────
-    const ga4Rows = await fetchCSV('📊 GA4_Analytics');
-    ga4Rows.slice(2).forEach(r => {
-      const yr  = parseInt(r[0]);
-      const mes = normMonth(r[1]);
+    // ── GA4 ───────────────────────────────────────────────────────────────
+    const g4R = await fetchSheet('📊 GA4_Analytics');
+    g4R.slice(2).forEach(r => {
+      const yr = parseInt(r[0]), mes = normM(r[1]);
       if(!yr || !mes) return;
       if(!WEB_GA4[yr]) WEB_GA4[yr] = {};
-      const prev = WEB_GA4[yr][mes]||{};
+      const prev = (WEB_GA4[yr][mes])||{};
       WEB_GA4[yr][mes] = {
-        usuarios: parseNum(r[2]), nuevos: parseNum(r[3]),
-        recurrentes: parseNum(r[4]), tIntMedio: parseNum(r[6]),
-        sesInt: parseNum(r[7]), eventos: parseNum(r[8]),
-        canales: prev.canales||[]
+        usuarios:n(r[2]),nuevos:n(r[3]),recurrentes:n(r[4]),
+        tIntMedio:n(r[6]),sesInt:n(r[7]),eventos:n(r[8]),
+        canales:prev.canales||[]
       };
     });
 
-    // ── Keywords ────────────────────────────────────────────────────────
-    const kwRows = await fetchCSV('🔑 GSC_Keywords');
+    // ── Keywords ──────────────────────────────────────────────────────────
+    const kR = await fetchSheet('🔑 GSC_Keywords');
     window.KW_DATA = {};
-    kwRows.slice(2).forEach(r => {
-      const yr  = parseInt(r[0]);
-      const mes = normMonth(r[1]);
+    kR.slice(2).forEach(r => {
+      const yr = parseInt(r[0]), mes = normM(r[1]);
       if(!yr || !mes || !r[2]) return;
       const key = yr+'_'+mes;
       if(!KW_DATA[key]) KW_DATA[key] = [];
-      KW_DATA[key].push({
-        kw:r[2], clics:parseNum(r[3])||0,
-        imp:parseNum(r[4])||0, ctr:parseNum(r[5])||0, pos:parseNum(r[6])||0
-      });
+      KW_DATA[key].push({kw:r[2],clics:n(r[3])||0,imp:n(r[4])||0,ctr:n(r[5])||0,pos:n(r[6])||0});
     });
 
-    // ── Update year selector ─────────────────────────────────────────────
-    const allYears = [...new Set([
+    // ── Update year selector ──────────────────────────────────────────────
+    const allYrs = [...new Set([
       ...Object.keys(DATA.fb).map(Number),
       ...Object.keys(DATA.li).map(Number),
       ...Object.keys(WEB_VISITS).map(Number)
     ])].sort((a,b)=>b-a);
-    const selYear = document.getElementById('selYear');
-    const existing = [...selYear.options].map(o=>parseInt(o.value));
-    allYears.forEach(yr => {
+    const sel = document.getElementById('selYear');
+    const existing = [...sel.options].map(o=>parseInt(o.value));
+    allYrs.forEach(yr => {
       if(!existing.includes(yr)){
-        const opt = document.createElement('option');
-        opt.value = yr; opt.textContent = yr;
-        selYear.insertBefore(opt, selYear.options[0]);
+        const o = document.createElement('option');
+        o.value=yr; o.textContent=yr;
+        sel.insertBefore(o, sel.options[0]);
       }
     });
 
-    // ── Success UI ───────────────────────────────────────────────────────
-    dot.className   = 'sync-dot';
-    label.textContent = '✓ Datos actualizados desde Google Sheets';
+    // ── Success ───────────────────────────────────────────────────────────
+    dot.className = 'sync-dot';
+    lbl.textContent = '✓ Datos actualizados desde Google Sheets';
     document.getElementById('syncTime').textContent =
       'Última actualización: ' + new Date().toLocaleString('es-PE');
-
-    overlay.style.display = 'none';
+    ov.style.display = 'none';
     populateMonths();
     render();
 
   } catch(err) {
-    dot.className = 'sync-dot error';
-    label.textContent = '✗ Error al conectar con Google Sheets — usando datos locales';
-    document.getElementById('syncTime').textContent = err.message || 'Verifica tu conexión a internet';
-    overlay.style.display = 'none';
-    console.error('Sheets error:', err);
+    console.error(err);
+    dot.className = 'sync-dot err';
+    lbl.textContent = '✗ Error al conectar — ' + err.message;
+    ov.style.display = 'none';
     populateMonths();
     render();
   }
 }
 
-// Auto-load on page open
-loadAllSheets();
+// Auto-load on open
+loadAll();
+
 </script>
 </body>
 </html>
