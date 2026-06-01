@@ -707,7 +707,7 @@ function buildWeb(yr, mo){
     <div class="wcard">
       <div class="wcard-ico">📊</div>
       <div class="wcard-lbl">CTR orgánico</div>
-      <div class="wcard-val">${gsc?gsc.ctr+'%':'—'}</div>
+      <div class="wcard-val">${gsc?(+gsc.ctr).toFixed(2)+'%':'—'}</div>
       <div class="wcard-sub ${gsc&&gsc.ctr>=5?'delta-g':'delta-n'}">${gsc&&gsc.ctr>=5?'Por encima del promedio':gsc?'Promedio industria ~5%':''}</div>
     </div>
     <div class="wcard">
@@ -791,7 +791,7 @@ function buildWeb(yr, mo){
             <td>${k.kw}${isOpp?'<span class="opp-badge">SEO OPP.</span>':''}</td>
             <td style="font-weight:${k.clics>0?700:400};color:${k.clics>0?'#1a1a2e':'#aaa'}">${k.clics}</td>
             <td>${k.imp.toLocaleString()}</td>
-            <td>${k.ctr>0?k.ctr+'%':'<span style="color:#ccc">0%</span>'}</td>
+            <td>${k.ctr>0?(+k.ctr).toFixed(2)+'%':'<span style="color:#ccc">0%</span>'}</td>
             <td><span class="pos-tag ${posTag}">${k.pos}</span></td>
           </tr>`;
         }).join('')}
@@ -1061,6 +1061,14 @@ async function loadAll() {
   ov.style.display = 'flex';
 
   try {
+    // ── Limpiar datos locales antes de cargar — así los borrados se reflejan ──
+    Object.keys(DATA.fb).forEach(yr => { DATA.fb[yr] = {}; });
+    Object.keys(DATA.li).forEach(yr => { DATA.li[yr] = {}; });
+    Object.keys(WEB_VISITS).forEach(yr => { delete WEB_VISITS[yr]; });
+    Object.keys(WEB_GSC).forEach(yr => { delete WEB_GSC[yr]; });
+    Object.keys(WEB_GA4).forEach(yr => { delete WEB_GA4[yr]; });
+    window.KW_DATA = {};
+
     // ── Facebook ──────────────────────────────────────────────────────
     const fbRows = await fetchSheetJSONP('Facebook_KPIs');
     fbRows.slice(3).forEach(r => {
