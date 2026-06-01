@@ -1006,35 +1006,14 @@ function switchTab(tab,btn){
 function onYearChange(){populateMonths();render();}
 
 
-// ─── GOOGLE SHEETS CSV LOADER ─────────────────────────────────────────────
-// Uses published CSV URLs — works from any browser/host without CORS issues
+// ─── APPS SCRIPT LOADER ───────────────────────────────────────────────────
+const AS_URL = "https://script.google.com/macros/s/AKfycby9NwjhC4O6PWxD_0SR-v-A1ojt1td6z6SIlW-Hu-rqtOyR4K0-EdvShCiegEk9DbBDuw/exec";
 
-const URLS = {
-  fb:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQaDrchqt6CiWkhM5ThiqH8n30_jWxLT7zw5O6gtv6icG0n9vy3WCOtDnokJsNX-B3ERL4YfjMs4CwP/pub?output=csv&gid=2012425260",
-  li:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQaDrchqt6CiWkhM5ThiqH8n30_jWxLT7zw5O6gtv6icG0n9vy3WCOtDnokJsNX-B3ERL4YfjMs4CwP/pub?output=csv&gid=609675741",
-  web: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQaDrchqt6CiWkhM5ThiqH8n30_jWxLT7zw5O6gtv6icG0n9vy3WCOtDnokJsNX-B3ERL4YfjMs4CwP/pub?output=csv&gid=327119990",
-  gsc: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQaDrchqt6CiWkhM5ThiqH8n30_jWxLT7zw5O6gtv6icG0n9vy3WCOtDnokJsNX-B3ERL4YfjMs4CwP/pub?output=csv&gid=375996902",
-  ga4: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQaDrchqt6CiWkhM5ThiqH8n30_jWxLT7zw5O6gtv6icG0n9vy3WCOtDnokJsNX-B3ERL4YfjMs4CwP/pub?output=csv&gid=591933354",
-  kw:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQaDrchqt6CiWkhM5ThiqH8n30_jWxLT7zw5O6gtv6icG0n9vy3WCOtDnokJsNX-B3ERL4YfjMs4CwP/pub?output=csv&gid=1417643605",
-};
-
-async function fetchCSV(url) {
+async function fetchSheet(sheetName) {
+  const url = AS_URL + '?sheet=' + encodeURIComponent(sheetName);
   const resp = await fetch(url);
-  if(!resp.ok) throw new Error('HTTP ' + resp.status + ' — ' + url);
-  const text = await resp.text();
-  // Parse CSV manually — handles quoted fields with commas
-  return text.trim().split('\n').map(row => {
-    const result = [];
-    let cur = '', inQ = false;
-    for(let i = 0; i < row.length; i++) {
-      const ch = row[i];
-      if(ch === '"') { inQ = !inQ; }
-      else if(ch === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
-      else { cur += ch; }
-    }
-    result.push(cur.trim());
-    return result;
-  });
+  if(!resp.ok) throw new Error('HTTP ' + resp.status + ' — ' + sheetName);
+  return await resp.json(); // returns array of arrays
 }
 
 function n(v) {
@@ -1060,8 +1039,7 @@ async function loadAll() {
 
   try {
     // ── Facebook ────────────────────────────────────────────────────────
-    const fbRows = await fetchCSV(URLS.fb);
-    // Row 0 = title, Row 1 = benchmark note, Row 2 = headers, Row 3+ = data
+    const fbRows = await fetchSheet('Facebook_KPIs');
     fbRows.slice(3).forEach(r => {
       const yr = parseInt(r[0]), mes = normM(r[1]);
       if(!yr || !mes) return;
@@ -1073,7 +1051,7 @@ async function loadAll() {
     });
 
     // ── LinkedIn ────────────────────────────────────────────────────────
-    const liRows = await fetchCSV(URLS.li);
+    const liRows = await fetchSheet('LinkedIn_KPIs');
     liRows.slice(3).forEach(r => {
       const yr = parseInt(r[0]), mes = normM(r[1]);
       if(!yr || !mes) return;
@@ -1085,24 +1063,23 @@ async function loadAll() {
     });
 
     // ── Web Visitas ─────────────────────────────────────────────────────
-    // Row 0 = title, Row 1 = headers (Mes,2021,2022,...,2026), Row 2+ = data
-    const webRows = await fetchCSV(URLS.web);
+    const webRows = await fetchSheet('Web_Visitas');
+    // Row 0=title, Row 1=headers [Mes,2021,2022,2023,2024,2025,2026,...], Row 2+=data
     const webHdr = webRows[1] || [];
     webRows.slice(2).forEach(r => {
       const mes = normM(r[0]);
-      if(!mes || mes === 'total') return;
+      if(!mes || mes==='total') return;
       [1,2,3,4,5,6].forEach(col => {
         const yr = parseInt(webHdr[col]);
         const val = n(r[col]);
-        if(!yr || val === null) return;
+        if(!yr || val===null) return;
         if(!WEB_VISITS[yr]) WEB_VISITS[yr] = {};
         WEB_VISITS[yr][mes] = val;
       });
     });
 
     // ── GSC ─────────────────────────────────────────────────────────────
-    // Row 0 = title, Row 1 = headers, Row 2+ = data
-    const gscRows = await fetchCSV(URLS.gsc);
+    const gscRows = await fetchSheet('GSC_SearchConsole');
     gscRows.slice(2).forEach(r => {
       const yr = parseInt(r[0]), mes = normM(r[1]);
       if(!yr || !mes) return;
@@ -1114,7 +1091,7 @@ async function loadAll() {
     });
 
     // ── GA4 ─────────────────────────────────────────────────────────────
-    const ga4Rows = await fetchCSV(URLS.ga4);
+    const ga4Rows = await fetchSheet('GA4_Analytics');
     ga4Rows.slice(2).forEach(r => {
       const yr = parseInt(r[0]), mes = normM(r[1]);
       if(!yr || !mes) return;
@@ -1128,7 +1105,7 @@ async function loadAll() {
     });
 
     // ── Keywords ────────────────────────────────────────────────────────
-    const kwRows = await fetchCSV(URLS.kw);
+    const kwRows = await fetchSheet('GSC_Keywords');
     window.KW_DATA = {};
     kwRows.slice(2).forEach(r => {
       const yr = parseInt(r[0]), mes = normM(r[1]);
@@ -1141,7 +1118,7 @@ async function loadAll() {
       });
     });
 
-    // ── Update year selector with any new years ──────────────────────
+    // ── Update year selector ─────────────────────────────────────────
     const allYrs = [...new Set([
       ...Object.keys(DATA.fb).map(Number),
       ...Object.keys(DATA.li).map(Number),
