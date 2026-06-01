@@ -1013,11 +1013,14 @@ async function fetchSheet(sheetName) {
   const url = AS_URL + '?sheet=' + encodeURIComponent(sheetName);
   const resp = await fetch(url);
   if(!resp.ok) throw new Error('HTTP ' + resp.status + ' — ' + sheetName);
-  return await resp.json(); // returns array of arrays
+  const data = await resp.json();
+  if(!Array.isArray(data)) throw new Error('Invalid data from: ' + sheetName);
+  return data;
 }
 
 function n(v) {
   if(v===null||v===undefined||v==='') return null;
+  if(typeof v === 'number') return isNaN(v)?null:v;
   const x = parseFloat(String(v).replace(/,/g,'.').replace(/[^\d.-]/g,''));
   return isNaN(x) ? null : x;
 }
@@ -1038,33 +1041,33 @@ async function loadAll() {
   ov.style.display = 'flex';
 
   try {
-    // ── Facebook ────────────────────────────────────────────────────────
+    // ── Facebook ─────────────────────────────────────────────────────────
+    // Cols: 0=Año, 1=Mes, 2=Seg, 3=Imp, 4=Alc, 5=Int, 6=Nseg, 7=Posts
+    // Cols 8-11 are formulas (%) — ignore them, dashboard calculates its own
     const fbRows = await fetchSheet('Facebook_KPIs');
     fbRows.slice(3).forEach(r => {
       const yr = parseInt(r[0]), mes = normM(r[1]);
       if(!yr || !mes) return;
+      const seg=n(r[2]), imp=n(r[3]), alc=n(r[4]), int=n(r[5]), nseg=n(r[6]), posts=n(r[7]);
+      if(seg===null && alc===null) return; // skip truly empty rows
       if(!DATA.fb[yr]) DATA.fb[yr] = {};
-      DATA.fb[yr][mes] = {
-        seg:n(r[2]), imp:n(r[3]), alc:n(r[4]),
-        int:n(r[5]), nseg:n(r[6]), posts:n(r[7])
-      };
+      DATA.fb[yr][mes] = {seg, imp, alc, int, nseg, posts};
     });
 
-    // ── LinkedIn ────────────────────────────────────────────────────────
+    // ── LinkedIn ──────────────────────────────────────────────────────────
     const liRows = await fetchSheet('LinkedIn_KPIs');
     liRows.slice(3).forEach(r => {
       const yr = parseInt(r[0]), mes = normM(r[1]);
       if(!yr || !mes) return;
+      const seg=n(r[2]), imp=n(r[3]), alc=n(r[4]), int=n(r[5]), nseg=n(r[6]), posts=n(r[7]);
+      if(seg===null && alc===null) return;
       if(!DATA.li[yr]) DATA.li[yr] = {};
-      DATA.li[yr][mes] = {
-        seg:n(r[2]), imp:n(r[3]), alc:n(r[4]),
-        int:n(r[5]), nseg:n(r[6]), posts:n(r[7])
-      };
+      DATA.li[yr][mes] = {seg, imp, alc, int, nseg, posts};
     });
 
-    // ── Web Visitas ─────────────────────────────────────────────────────
+    // ── Web Visitas ───────────────────────────────────────────────────────
+    // Row 0=title, Row 1=headers [Mes,2021,2022,2023,2024,2025,2026,Var,Best]
     const webRows = await fetchSheet('Web_Visitas');
-    // Row 0=title, Row 1=headers [Mes,2021,2022,2023,2024,2025,2026,...], Row 2+=data
     const webHdr = webRows[1] || [];
     webRows.slice(2).forEach(r => {
       const mes = normM(r[0]);
@@ -1072,29 +1075,30 @@ async function loadAll() {
       [1,2,3,4,5,6].forEach(col => {
         const yr = parseInt(webHdr[col]);
         const val = n(r[col]);
-        if(!yr || val===null) return;
+        if(!yr || val===null || val===0) return;
         if(!WEB_VISITS[yr]) WEB_VISITS[yr] = {};
         WEB_VISITS[yr][mes] = val;
       });
     });
 
-    // ── GSC ─────────────────────────────────────────────────────────────
+    // ── GSC ───────────────────────────────────────────────────────────────
+    // Row 0=title, Row 1=headers, Row 2+=data
+    // Cols: 0=Año, 1=Mes, 2=Clics, 3=Imp, 4=CTR, 5=PosMedia
     const gscRows = await fetchSheet('GSC_SearchConsole');
     gscRows.slice(2).forEach(r => {
       const yr = parseInt(r[0]), mes = normM(r[1]);
-      if(!yr || !mes) return;
+      if(!yr || !mes || n(r[2])===null) return;
       if(!WEB_GSC[yr]) WEB_GSC[yr] = {};
-      WEB_GSC[yr][mes] = {
-        clics:n(r[2]), imp:n(r[3]),
-        ctr:n(r[4]), posMedia:n(r[5])
-      };
+      WEB_GSC[yr][mes] = {clics:n(r[2]),imp:n(r[3]),ctr:n(r[4]),posMedia:n(r[5])};
     });
 
-    // ── GA4 ─────────────────────────────────────────────────────────────
+    // ── GA4 ───────────────────────────────────────────────────────────────
+    // Cols: 0=Año, 1=Mes, 2=Usuarios, 3=Nuevos, 4=Recurrentes, 5=%Nuevos(formula),
+    //       6=TIntMedio, 7=SesInt, 8=Eventos, 9=OrgSearch%
     const ga4Rows = await fetchSheet('GA4_Analytics');
     ga4Rows.slice(2).forEach(r => {
       const yr = parseInt(r[0]), mes = normM(r[1]);
-      if(!yr || !mes) return;
+      if(!yr || !mes || n(r[2])===null) return;
       if(!WEB_GA4[yr]) WEB_GA4[yr] = {};
       const prev = WEB_GA4[yr][mes] || {};
       WEB_GA4[yr][mes] = {
@@ -1104,7 +1108,8 @@ async function loadAll() {
       };
     });
 
-    // ── Keywords ────────────────────────────────────────────────────────
+    // ── Keywords ──────────────────────────────────────────────────────────
+    // Cols: 0=Año, 1=Mes, 2=Keyword, 3=Clics, 4=Imp, 5=CTR, 6=Pos
     const kwRows = await fetchSheet('GSC_Keywords');
     window.KW_DATA = {};
     kwRows.slice(2).forEach(r => {
@@ -1113,12 +1118,12 @@ async function loadAll() {
       const key = yr + '_' + mes;
       if(!KW_DATA[key]) KW_DATA[key] = [];
       KW_DATA[key].push({
-        kw:r[2], clics:n(r[3])||0,
+        kw:String(r[2]), clics:n(r[3])||0,
         imp:n(r[4])||0, ctr:n(r[5])||0, pos:n(r[6])||0
       });
     });
 
-    // ── Update year selector ─────────────────────────────────────────
+    // ── Update year selector ──────────────────────────────────────────────
     const allYrs = [...new Set([
       ...Object.keys(DATA.fb).map(Number),
       ...Object.keys(DATA.li).map(Number),
@@ -1134,7 +1139,7 @@ async function loadAll() {
       }
     });
 
-    // ── Success ──────────────────────────────────────────────────────
+    // ── Success ───────────────────────────────────────────────────────────
     dot.className = 'sync-dot';
     lbl.textContent = '✓ Datos actualizados desde Google Sheets';
     document.getElementById('syncTime').textContent =
