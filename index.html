@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard KPIs — PIL Perú 2021–2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh}
+.page{max-width:1120px;margin:0 auto;padding:24px 20px}
+
+/* Header */
+.header{background:#0f2d5e;border-radius:14px;padding:20px 28px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.header-left{display:flex;align-items:center;gap:14px}
+.logo{background:#fff;color:#0f2d5e;font-weight:800;font-size:15px;padding:8px 16px;border-radius:8px;letter-spacing:2px}
+.header h1{font-size:17px;font-weight:600;color:#fff;line-height:1.3}
+.header p{font-size:12px;color:rgba(255,255,255,0.6);margin-top:3px}
+.controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ctrl{display:flex;align-items:center;gap:6px}
+.ctrl label{font-size:12px;color:rgba(255,255,255,0.7);font-weight:500;white-space:nowrap}
+.ctrl select{font-size:13px;padding:7px 12px;border-radius:8px;border:none;background:rgba(255,255,255,0.13);color:#fff;cursor:pointer;outline:none;min-width:90px}
+.ctrl select option{background:#1a3a6b;color:#fff}
+.ctrl select:hover{background:rgba(255,255,255,0.22)}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;background:#fff;border-radius:10px;padding:5px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.tab{flex:1;padding:9px 10px;border:none;background:none;font-size:13px;font-weight:500;color:#777;cursor:pointer;border-radius:7px;transition:all .15s;white-space:nowrap}
+.tab.on{background:#0f2d5e;color:#fff;box-shadow:0 2px 6px rgba(15,45,94,.25)}
+.tab:hover:not(.on){background:#f0f2f5;color:#0f2d5e}
+
+/* KPI grid */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
+@media(max-width:760px){.kpi-row{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:480px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.kcard{background:#fff;border-radius:12px;padding:16px 14px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-top:3px solid #0f2d5e}
+.kcard.li-card{border-top-color:#0077b5}
+.kcard-ico{width:32px;height:32px;border-radius:8px;background:#e8eef8;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.kcard-ico svg{width:15px;height:15px;stroke:#0f2d5e;fill:none;stroke-width:2}
+.kcard.li-card .kcard-ico{background:#e5f1f8}
+.kcard.li-card .kcard-ico svg{stroke:#0077b5}
+.kcard-lbl{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;font-weight:600}
+.kcard-val{font-size:24px;font-weight:700;color:#1a1a2e;line-height:1}
+.kcard-sub{font-size:11px;color:#aaa;margin-top:3px}
+.badge{display:inline-flex;align-items:center;gap:2px;font-size:10px;padding:3px 8px;border-radius:20px;margin-top:6px;font-weight:700}
+.bg{background:#d1fae5;color:#065f46}
+.ba{background:#fef3c7;color:#92400e}
+.br{background:#fee2e2;color:#991b1b}
+.bb{background:#dbeafe;color:#1e40af}
+
+/* Bench */
+.bench-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+@media(max-width:580px){.bench-grid{grid-template-columns:1fr}}
+.bcard{background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.bcard-lbl{font-size:10px;color:#999;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.bcard-nums{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+.bcard-val{font-size:28px;font-weight:700;color:#1a1a2e}
+.bcard-tgt{font-size:12px;color:#bbb;background:#f5f5f5;padding:2px 8px;border-radius:6px}
+.pbar-bg{background:#f0f2f5;border-radius:20px;height:7px;overflow:hidden;margin-bottom:8px}
+.pbar{height:100%;border-radius:20px;transition:width .7s ease}
+
+/* Insights */
+.insights{background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-left:4px solid #0f2d5e}
+.insight{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #f8f8f8;font-size:13px;color:#555;align-items:flex-start;line-height:1.5}
+.insight:last-child{border-bottom:none;padding-bottom:0}
+.iico{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:11px;font-weight:700}
+.ii-g{background:#d1fae5;color:#065f46}
+.ii-a{background:#fef3c7;color:#92400e}
+.ii-r{background:#fee2e2;color:#991b1b}
+.ii-b{background:#dbeafe;color:#1e40af}
+.insight b{font-weight:700;color:#1a1a2e}
+
+/* Section label */
+.sec{font-size:10px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:.8px;margin:18px 0 10px;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:#ebebeb}
+
+/* Compare */
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+@media(max-width:580px){.comp-grid{grid-template-columns:1fr}}
+.cplat{background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.cplat-hd{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f0f2f5}
+.pdot{width:10px;height:10px;border-radius:50%}
+.pname{font-size:14px;font-weight:700;color:#1a1a2e}
+.srow{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f8f8f8;font-size:13px}
+.srow:last-child{border-bottom:none}
+.sk{color:#999}
+.sv{font-weight:600;color:#1a1a2e}
+.sv-g{font-weight:700;color:#065f46}
+.sv-a{font-weight:700;color:#92400e}
+.sv-r{font-weight:700;color:#991b1b}
+
+/* Chart box */
+.cbox{background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:16px}
+.cbox-title{font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:3px}
+.cbox-sub{font-size:11px;color:#bbb;margin-bottom:12px}
+.leg{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px}
+.leg span{display:flex;align-items:center;gap:5px;font-size:11px;color:#666}
+.leg i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.cw{position:relative;width:100%}
+
+/* Year overview */
+.yr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+@media(max-width:700px){.yr-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:440px){.yr-grid{grid-template-columns:1fr}}
+.yr-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07);cursor:pointer;border:2px solid transparent;transition:all .15s}
+.yr-card:hover{border-color:#0f2d5e}
+.yr-card.active{border-color:#0f2d5e;background:#f0f4ff}
+.yr-num{font-size:22px;font-weight:800;color:#0f2d5e;margin-bottom:6px}
+.yr-stat{font-size:12px;color:#888;display:flex;justify-content:space-between;padding:2px 0}
+.yr-stat span:last-child{font-weight:600;color:#333}
+
+/* Table */
+.tscroll{overflow-x:auto;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+table{width:100%;border-collapse:collapse;background:#fff;font-size:12px;min-width:600px}
+thead th{background:#0f2d5e;color:#fff;padding:10px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
+thead th:first-child{border-radius:12px 0 0 0}
+thead th:last-child{border-radius:0 12px 0 0}
+tbody tr:nth-child(even){background:#fafafa}
+tbody tr:hover{background:#f0f4ff}
+tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;color:#333;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.pill-g{background:#d1fae5;color:#065f46}
+.pill-a{background:#fef3c7;color:#92400e}
+.pill-r{background:#fee2e2;color:#991b1b}
+.no-data{color:#ccc;font-style:italic}
+
+/* Footer */
+.footer{text-align:center;font-size:11px;color:#ccc;margin-top:24px;padding-bottom:16px}
+
+/* Multi-year chart area */
+.multi-yr-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.yr-tab{padding:5px 14px;border-radius:20px;font-size:12px;border:1.5px solid #ddd;background:#fff;cursor:pointer;font-weight:500;color:#666;transition:all .12s}
+.yr-tab.on{background:#0f2d5e;color:#fff;border-color:#0f2d5e}
+/* Web section */
+.web-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+@media(max-width:700px){.web-kpi-row{grid-template-columns:repeat(2,1fr)}}
+.wcard{background:#fff;border-radius:12px;padding:16px 14px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-top:3px solid #4285f4}
+.wcard-ico{width:30px;height:30px;border-radius:8px;background:#e8f0fe;display:flex;align-items:center;justify-content:center;margin-bottom:8px;font-size:14px;color:#4285f4}
+.wcard-lbl{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;font-weight:600}
+.wcard-val{font-size:22px;font-weight:700;color:#1a1a2e;line-height:1}
+.wcard-sub{font-size:11px;margin-top:4px}
+.delta-r{color:#991b1b;font-weight:600}
+.delta-g{color:#065f46;font-weight:600}
+.delta-n{color:#888}
+.channel-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+@media(max-width:580px){.channel-grid{grid-template-columns:1fr}}
+.chan-card{background:var(--color-background-secondary,#f9f9f9);border-radius:10px;padding:12px 14px}
+.chan-name{font-size:11px;font-weight:700;color:#1a1a2e;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.chan-pct-big{font-size:20px;font-weight:700;color:#1a1a2e}
+.chan-sub{font-size:11px;color:#888;margin-top:2px}
+.chan-bar-bg{background:#e5e7eb;border-radius:4px;height:4px;margin-top:8px;overflow:hidden}
+.chan-bar-fill{height:100%;border-radius:4px}
+.kw-table{width:100%;border-collapse:collapse;font-size:12px}
+.kw-table th{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.4px;padding:7px 10px;text-align:left;border-bottom:1.5px solid #eee;font-weight:600;white-space:nowrap}
+.kw-table td{padding:7px 10px;border-bottom:0.5px solid #f5f5f5;color:#333;vertical-align:middle}
+.kw-table tr:last-child td{border-bottom:none}
+.kw-table tr:hover td{background:#f8f9ff}
+.kw-table td:first-child{font-weight:600;color:#888;width:30px}
+.pos-tag{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;display:inline-block}
+.pos-1{background:#faeeda;color:#633806}
+.pos-top{background:#eaf3de;color:#27500a}
+.pos-mid{background:#f0f0f0;color:#555}
+.opp-badge{background:#e6f1fb;color:#0c447c;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600;margin-left:4px}
+.visits-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:560px){.visits-summary{grid-template-columns:1fr 1fr}}
+.vs-card{background:#fff;border-radius:10px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.06);text-align:center}
+.vs-yr{font-size:11px;font-weight:700;color:#888;margin-bottom:4px}
+.vs-val{font-size:17px;font-weight:700;color:#1a1a2e}
+.vs-delta{font-size:10px;margin-top:3px}
+
+/* ── Sync bar ────────────────────────────────────────────────────────────── */
+.sync-bar{background:#0f2d5e;border-radius:10px;padding:10px 20px;margin-bottom:14px;
+  display:flex;align-items:center;gap:12px;color:#fff;font-size:12px;flex-wrap:wrap}
+.sync-dot{width:9px;height:9px;border-radius:50%;background:#10b981;flex-shrink:0}
+.sync-dot.spin{background:#f59e0b;animation:rot 1s linear infinite}
+.sync-dot.err{background:#ef4444}
+@keyframes rot{to{transform:rotate(360deg);border-radius:0}}
+.sync-label{font-weight:600;font-size:12px;flex:1}
+.sync-time{font-size:10px;opacity:.65}
+.sync-btn{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:6px;
+  padding:5px 12px;font-size:11px;cursor:pointer;font-weight:600}
+.sync-btn:hover{background:rgba(255,255,255,.25)}
+.overlay{position:fixed;inset:0;background:rgba(15,45,94,.88);z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.ov-spin{width:44px;height:44px;border:4px solid rgba(255,255,255,.2);
+  border-top-color:#fff;border-radius:50%;animation:rot .8s linear infinite}
+.ov-txt{color:#fff;font-size:14px;font-weight:600}
+.ov-sub{color:rgba(255,255,255,.6);font-size:12px}
+/* ── Tooltips ─────────────────────────────────────────────────────────────── */
+.tip{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
+  border-radius:50%;background:#0f2d5e;color:#fff;font-size:9px;font-weight:700;
+  cursor:pointer;margin-left:5px;vertical-align:middle;position:relative;flex-shrink:0;
+  transition:background .15s;user-select:none;border:none}
+thead .tip{background:rgba(255,255,255,0.25)}
+thead .tip:hover{background:rgba(255,255,255,0.5)}
+.tip:hover{background:#1a4480}
+.tip-box{position:fixed;background:#1a1a2e;color:#fff;font-size:12px;font-weight:400;
+  padding:10px 14px;border-radius:8px;max-width:260px;line-height:1.6;z-index:99999;
+  box-shadow:0 4px 20px rgba(0,0,0,0.35);pointer-events:none;text-transform:none;
+  letter-spacing:0;display:none;border:1px solid rgba(255,255,255,0.1)}
+.tip-box.visible{display:block}
+
+/* ── Grilla de Contenidos ─────────────────────────────────────────────────── */
+.grilla-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;background:#fff;border-radius:12px;padding:14px 18px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.grilla-toolbar-title{font-size:13px;font-weight:700;color:#0f2d5e;margin-right:4px;white-space:nowrap}
+.gf-select{font-size:12px;padding:6px 10px;border-radius:8px;border:1.5px solid #e0e6f0;background:#f8fafd;color:#1a1a2e;cursor:pointer;outline:none;min-width:100px}
+.gf-select:focus{border-color:#0f2d5e}
+.gf-input{font-size:12px;padding:6px 10px;border-radius:8px;border:1.5px solid #e0e6f0;background:#f8fafd;color:#1a1a2e;outline:none;min-width:160px;flex:1}
+.gf-input:focus{border-color:#0f2d5e}
+.gf-btn{font-size:12px;padding:6px 14px;border-radius:8px;border:none;cursor:pointer;font-weight:600;transition:all .12s}
+.gf-btn-clear{background:#f0f2f5;color:#555}.gf-btn-clear:hover{background:#e0e6f0}
+.gf-btn-add{background:#0f2d5e;color:#fff;display:flex;align-items:center;gap:5px}.gf-btn-add:hover{background:#1a4480}
+.grilla-stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.gstat{background:#fff;border-radius:10px;padding:10px 16px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;align-items:center;gap:10px;min-width:130px}
+.gstat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.gstat-info{display:flex;flex-direction:column}
+.gstat-num{font-size:20px;font-weight:700;color:#1a1a2e;line-height:1}
+.gstat-lbl{font-size:10px;color:#aaa;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+.grilla-count{font-size:12px;color:#888;margin-bottom:10px;padding:0 2px}
+.grilla-count b{color:#0f2d5e;font-weight:700}
+.grilla-table-wrap{overflow-x:auto;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.grilla-table{width:100%;border-collapse:collapse;background:#fff;font-size:12px;min-width:820px}
+.grilla-table thead th{background:#0f2d5e;color:#fff;padding:10px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
+.grilla-table thead th:first-child{border-radius:12px 0 0 0}
+.grilla-table thead th:last-child{border-radius:0 12px 0 0}
+.grilla-table tbody tr:nth-child(even){background:#fafafa}
+.grilla-table tbody tr:hover{background:#f0f4ff}
+.grilla-table tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;color:#333;vertical-align:middle}
+.grilla-table tbody tr:last-child td{border-bottom:none}
+.cat-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.cat-efemeride{background:#fef3c7;color:#92400e}
+.cat-actividad{background:#dbeafe;color:#1e40af}
+.cat-proyecto{background:#d1fae5;color:#065f46}
+.cat-noticia{background:#f3e8ff;color:#6b21a8}
+.est-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;transition:opacity .15s;border:none;outline:none}
+.est-badge:hover{opacity:.8}
+.est-pendiente{background:#fee2e2;color:#991b1b}
+.est-publicado{background:#d1fae5;color:#065f46}
+.est-proceso{background:#fef3c7;color:#92400e}
+.grilla-no-results{text-align:center;padding:40px 20px;color:#bbb;font-size:13px;background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.month-divider td{background:#f0f4ff !important;font-weight:700;font-size:11px;color:#0f2d5e;letter-spacing:.5px;text-transform:uppercase;padding:7px 12px !important;border-bottom:1.5px solid #d0dcf5 !important}
+.row-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.grilla-table tbody tr:hover .row-actions{opacity:1}
+.act-btn{width:26px;height:26px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .12s}
+.act-edit{background:#e8f0fe;color:#1a56db}.act-edit:hover{background:#1a56db;color:#fff}
+.act-del{background:#fee2e2;color:#991b1b}.act-del:hover{background:#991b1b;color:#fff}
+/* ── Modal overlay ────────────────────────────────────────────────────────── */
+.gmodal-bg{position:fixed;inset:0;background:rgba(15,45,94,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
+.gmodal-bg.hidden{display:none}
+.gmodal{background:#fff;border-radius:16px;padding:28px 32px;width:100%;max-width:560px;box-shadow:0 20px 60px rgba(0,0,0,.25);position:relative;max-height:90vh;overflow-y:auto}
+.gmodal-title{font-size:16px;font-weight:700;color:#0f2d5e;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.gmodal-close{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;border:none;background:#f0f2f5;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:#555}
+.gmodal-close:hover{background:#e0e6f0}
+.gfield{margin-bottom:14px}
+.gfield label{display:block;font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.gfield input,.gfield select,.gfield textarea{width:100%;padding:9px 12px;border-radius:8px;border:1.5px solid #e0e6f0;font-size:13px;color:#1a1a2e;outline:none;background:#fafbfd;font-family:inherit;transition:border-color .15s}
+.gfield input:focus,.gfield select:focus,.gfield textarea:focus{border-color:#0f2d5e}
+.gfield textarea{resize:vertical;min-height:72px}
+.gfield-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.gmodal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid #f0f0f0}
+.gbtn{padding:9px 20px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:all .12s}
+.gbtn-cancel{background:#f0f2f5;color:#555}.gbtn-cancel:hover{background:#e0e6f0}
+.gbtn-save{background:#0f2d5e;color:#fff}.gbtn-save:hover{background:#1a4480}
+.gbtn-del{background:#fee2e2;color:#991b1b}.gbtn-del:hover{background:#991b1b;color:#fff}
+/* confirm modal */
+.gconfirm-msg{font-size:14px;color:#333;line-height:1.6;margin-bottom:6px}
+.gconfirm-detail{font-size:12px;color:#888;background:#f8f8f8;border-radius:8px;padding:10px 14px;margin-top:10px;line-height:1.5}
+/* toast */
+.gtoast{position:fixed;bottom:24px;right:24px;background:#1a1a2e;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.25);transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none}
+.gtoast.show{transform:translateY(0);opacity:1}
+.gtoast.ok{border-left:4px solid #10b981}
+.gtoast.err{border-left:4px solid #ef4444}
+.gtoast.warn{border-left:4px solid #f59e0b}
+/* saving spinner on badge */
+.est-saving{opacity:.5;pointer-events:none}
+
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">PIL</div>
+    <div>
+      <h1>Dashboard de KPIs — Redes Sociales</h1>
+      <p>Rendimiento mensual Facebook &amp; LinkedIn · PIL Perú S.A.C. · 2021–2026</p>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="ctrl">
+      <label>Año</label>
+      <select id="selYear" onchange="onYearChange()">
+        <option value="2026">2026</option>
+        <option value="2025">2025</option>
+        <option value="2024">2024</option>
+        <option value="2023">2023</option>
+        <option value="2022">2022</option>
+        <option value="2021">2021</option>
+      </select>
+    </div>
+    <div class="ctrl">
+      <label>Mes</label>
+      <select id="selMonth" onchange="render()"></select>
+    </div>
+  </div>
+</div>
+
+
+<div class="overlay" id="ov">
+  <div class="ov-spin"></div>
+  <div class="ov-txt">Conectando con Google Sheets</div>
+  <div class="ov-sub">Cargando datos de PIL Perú...</div>
+</div>
+<div class="sync-bar" id="syncBar">
+  <div class="sync-dot spin" id="syncDot"></div>
+  <div class="sync-label" id="syncLbl">Cargando datos desde Google Sheets...</div>
+  <span class="sync-time" id="syncTime"></span>
+  <button class="sync-btn" onclick="loadAll()">↻ Actualizar</button>
+</div>
+<div class="tabs">
+  <button class="tab on" onclick="switchTab('fb',this)">📘 Facebook</button>
+  <button class="tab" onclick="switchTab('li',this)">💼 LinkedIn</button>
+  <button class="tab" onclick="switchTab('comp',this)">⚖️ Comparativo</button>
+  <button class="tab" onclick="switchTab('web',this)">🌐 Web &amp; SEO</button>
+  <button class="tab" onclick="switchTab('hist',this)">📈 Histórico</button>
+  <button class="tab" onclick="switchTab('multi',this)">🗓️ Multianual</button>
+  <button class="tab" onclick="switchTab('grilla',this)">📋 Grilla 2026</button>
+</div>
+
+<div id="pane-fb"></div>
+<div id="pane-li" style="display:none"></div>
+<div id="pane-comp" style="display:none"></div>
+<div id="pane-web" style="display:none"></div>
+<div id="pane-hist" style="display:none"></div>
+<div id="pane-multi" style="display:none"></div>
+<div id="pane-grilla" style="display:none"></div>
+
+<div class="footer">PIL Perú S.A.C. · Dashboard Digital 2021–2026 · Elaborado por Brian Reque Aradiel</div>
+</div>
+
+<script>
+// ─── DATASET COMPLETO ──────────────────────────────────────────────────────
+// Estructura: {seg, imp, alc, int, nseg, posts}
+// FB: imp=impresiones FB, alc=alcance, int=interacciones, nseg=nuevos seg, posts
+// LI: mismo orden para LinkedIn
+const DATA = {
+  fb: {
+    2021: {
+      enero:    {seg:2310,imp:null,alc:2366,int:166,nseg:20,posts:7},
+      febrero:  {seg:2330,imp:null,alc:917, int:49, nseg:10,posts:1},
+      marzo:    {seg:2360,imp:null,alc:2918,int:258,nseg:15,posts:5},
+      abril:    {seg:2390,imp:null,alc:10771,int:618,nseg:25,posts:9},
+      mayo:     {seg:2420,imp:null,alc:7737,int:633,nseg:18,posts:11},
+      junio:    {seg:2450,imp:null,alc:6680,int:536,nseg:15,posts:11},
+      julio:    {seg:2460,imp:null,alc:2182,int:125,nseg:8,posts:3},
+      agosto:   {seg:2470,imp:null,alc:782, int:68, nseg:5,posts:1},
+      setiembre:{seg:2480,imp:null,alc:2302,int:141,nseg:8,posts:3},
+      octubre:  {seg:2500,imp:null,alc:4109,int:282,nseg:12,posts:7},
+      noviembre:{seg:2520,imp:null,alc:1748,int:122,nseg:8,posts:5},
+      diciembre:{seg:2540,imp:null,alc:3016,int:316,nseg:10,posts:6}
+    },
+    2022: {
+      enero:    {seg:2571,imp:3344,alc:1203,int:116,nseg:33,posts:4},
+      febrero:  {seg:2610,imp:4322,alc:647, int:399,nseg:39,posts:4},
+      marzo:    {seg:2634,imp:3146,alc:1076,int:154,nseg:24,posts:4},
+      abril:    {seg:2642,imp:3743,alc:390, int:118,nseg:8, posts:4},
+      mayo:     {seg:2671,imp:4084,alc:358, int:161,nseg:29,posts:5},
+      junio:    {seg:2692,imp:4748,alc:426, int:297,nseg:21,posts:6},
+      julio:    {seg:2705,imp:3942,alc:771, int:297,nseg:13,posts:3},
+      agosto:   {seg:2722,imp:0,   alc:542, int:147,nseg:17,posts:5},
+      setiembre:{seg:2726,imp:0,   alc:308, int:36, nseg:7, posts:4},
+      octubre:  {seg:2726,imp:0,   alc:446, int:147,nseg:12,posts:4},
+      noviembre:{seg:2760,imp:0,   alc:961, int:178,nseg:6, posts:3},
+      diciembre:{seg:2760,imp:0,   alc:1041,int:269,nseg:35,posts:2}
+    },
+    2023: {
+      enero:    {seg:2865,imp:null,alc:1596,int:152,nseg:43,posts:2},
+      febrero:  {seg:2877,imp:3867,alc:795, int:340,nseg:19,posts:4},
+      marzo:    {seg:2911,imp:null,alc:436, int:39, nseg:24,posts:2},
+      abril:    {seg:2911,imp:1123,alc:136, int:20, nseg:2, posts:2},
+      mayo:     {seg:2939,imp:398, alc:203, int:9,  nseg:5, posts:5},
+      junio:    {seg:2957,imp:688, alc:144, int:9,  nseg:4, posts:4},
+      julio:    {seg:2957,imp:850, alc:213, int:17, nseg:3, posts:3},
+      agosto:   {seg:2796,imp:1113,alc:285, int:13, nseg:3, posts:3},
+      setiembre:{seg:2796,imp:1085,alc:23,  int:4,  nseg:1, posts:1},
+      octubre:  {seg:2801,imp:1641,alc:64,  int:5,  nseg:1, posts:1},
+      noviembre:{seg:2801,imp:433, alc:0,   int:0,  nseg:0, posts:0},
+      diciembre:{seg:3040,imp:1012,alc:1012,int:96, nseg:3, posts:2}
+    },
+    2024: {
+      enero:    {seg:3052,imp:null,alc:770, int:15, nseg:13,posts:1},
+      febrero:  {seg:3066,imp:2759,alc:1294,int:147,nseg:14,posts:2},
+      marzo:    {seg:3085,imp:2759,alc:1119,int:72, nseg:24,posts:1},
+      abril:    {seg:3090,imp:1123,alc:1031,int:52, nseg:10,posts:1},
+      mayo:     {seg:3097,imp:2237,alc:496, int:92, nseg:7, posts:3},
+      junio:    {seg:3108,imp:401, alc:34,  int:11, nseg:1, posts:1},
+      julio:    {seg:3108,imp:376, alc:76,  int:13, nseg:3, posts:3},
+      agosto:   {seg:3114,imp:312, alc:249, int:60, nseg:6, posts:1},
+      setiembre:{seg:3120,imp:979, alc:939, int:24, nseg:17,posts:1},
+      octubre:  {seg:3120,imp:1846,alc:502, int:17, nseg:6, posts:1},
+      noviembre:{seg:3120,imp:1088,alc:134, int:5,  nseg:8, posts:0},
+      diciembre:{seg:3123,imp:3326,alc:577, int:57, nseg:6, posts:1}
+    },
+    2025: {
+      enero:    {seg:3124,imp:1721,alc:299, int:14, nseg:6, posts:0},
+      febrero:  {seg:3132,imp:1357,alc:202, int:8,  nseg:13,posts:1},
+      marzo:    {seg:3143,imp:2610,alc:683, int:62, nseg:11,posts:2},
+      abril:    {seg:3149,imp:2124,alc:362, int:46, nseg:6, posts:2},
+      mayo:     {seg:3158,imp:2386,alc:175, int:48, nseg:9, posts:3},
+      junio:    {seg:3163,imp:1104,alc:207, int:33, nseg:5, posts:2},
+      julio:    {seg:3154,imp:830, alc:109, int:2,  nseg:7, posts:0},
+      agosto:   {seg:3164,imp:3301,alc:979, int:160,nseg:15,posts:1},
+      setiembre:{seg:3168,imp:700, alc:119, int:1,  nseg:2, posts:0},
+      octubre:  {seg:3165,imp:690, alc:110, int:7,  nseg:3, posts:0},
+      noviembre:{seg:3163,imp:650, alc:80,  int:0,  nseg:2, posts:0},
+      diciembre:{seg:3160,imp:660, alc:108, int:1,  nseg:1, posts:0}
+    },
+    2026: {
+      enero:   {seg:3160,imp:775, alc:97,  int:4,  nseg:7,  posts:0},
+      febrero: {seg:3167,imp:717, alc:93,  int:1,  nseg:3,  posts:0},
+      marzo:   {seg:3170,imp:746, alc:97,  int:0,  nseg:5,  posts:0},
+      abril:   {seg:3176,imp:3349,alc:900, int:61, nseg:14, posts:1}
+    }
+  },
+  li: {
+    2021: {
+      enero:    {seg:1800,imp:null,alc:null,int:null,nseg:null,posts:null},
+      febrero:  {seg:1820,imp:null,alc:null,int:null,nseg:null,posts:null},
+      marzo:    {seg:1850,imp:null,alc:null,int:null,nseg:null,posts:null},
+      abril:    {seg:1880,imp:null,alc:null,int:null,nseg:null,posts:null},
+      mayo:     {seg:1910,imp:null,alc:null,int:null,nseg:null,posts:null},
+      junio:    {seg:1940,imp:null,alc:null,int:null,nseg:null,posts:null},
+      julio:    {seg:1960,imp:null,alc:null,int:null,nseg:null,posts:null},
+      agosto:   {seg:1980,imp:null,alc:null,int:null,nseg:null,posts:null},
+      setiembre:{seg:2000,imp:null,alc:null,int:null,nseg:null,posts:null},
+      octubre:  {seg:2020,imp:null,alc:null,int:null,nseg:null,posts:null},
+      noviembre:{seg:2040,imp:null,alc:null,int:null,nseg:null,posts:null},
+      diciembre:{seg:2060,imp:null,alc:null,int:null,nseg:null,posts:null}
+    },
+    2022: {
+      enero:    {seg:3115,imp:6054, alc:695, int:339,nseg:27,posts:5},
+      febrero:  {seg:3152,imp:6240, alc:1923,int:601,nseg:35,posts:3},
+      marzo:    {seg:3194,imp:5635, alc:3330,int:488,nseg:42,posts:2},
+      abril:    {seg:3232,imp:2814, alc:559, int:349,nseg:29,posts:3},
+      mayo:     {seg:3273,imp:4634, alc:718, int:341,nseg:41,posts:4},
+      junio:    {seg:3304,imp:3752, alc:429, int:152,nseg:32,posts:5},
+      julio:    {seg:3314,imp:4884, alc:975, int:198,nseg:26,posts:3},
+      agosto:   {seg:3348,imp:5385, alc:665, int:367,nseg:34,posts:5},
+      setiembre:{seg:3470,imp:5491, alc:743, int:347,nseg:135,posts:4},
+      octubre:  {seg:3470,imp:6408, alc:1602,int:256,nseg:31,posts:4},
+      noviembre:{seg:3690,imp:6406, alc:1188,int:730,nseg:112,posts:3},
+      diciembre:{seg:3690,imp:6406, alc:1188,int:730,nseg:112,posts:2}
+    },
+    2023: {
+      enero:    {seg:3808,imp:4232, alc:904, int:728,nseg:59,posts:2},
+      febrero:  {seg:3821,imp:7038, alc:981, int:549,nseg:69,posts:4},
+      marzo:    {seg:3854,imp:3947, alc:716, int:221,nseg:33,posts:3},
+      abril:    {seg:3854,imp:3923, alc:556, int:421,nseg:38,posts:3},
+      mayo:     {seg:3947,imp:6314, alc:816, int:1412,nseg:51,posts:4},
+      junio:    {seg:3990,imp:6444, alc:760, int:1231,nseg:47,posts:4},
+      julio:    {seg:3990,imp:6082, alc:746, int:1163,nseg:34,posts:4},
+      agosto:   {seg:4066,imp:5599, alc:959, int:856, nseg:54,posts:3},
+      setiembre:{seg:4066,imp:1938, alc:791, int:273, nseg:36,posts:1},
+      octubre:  {seg:4101,imp:2401, alc:1113,int:519, nseg:51,posts:1},
+      noviembre:{seg:4101,imp:2741, alc:1125,int:560, nseg:41,posts:1},
+      diciembre:{seg:4101,imp:3979, alc:942, int:637, nseg:41,posts:1}
+    },
+    2024: {
+      enero:    {seg:3808,imp:3708, alc:1185,int:525, nseg:198,posts:1},
+      febrero:  {seg:3808,imp:5629, alc:1260,int:1143,nseg:130,posts:1},
+      marzo:    {seg:3808,imp:3401, alc:1241,int:411, nseg:146,posts:1},
+      abril:    {seg:3808,imp:4014, alc:1343,int:1151,nseg:105,posts:1},
+      mayo:     {seg:4799,imp:5346, alc:1393,int:1068,nseg:95,posts:2},
+      junio:    {seg:4922,imp:1686, alc:600, int:113, nseg:123,posts:1},
+      julio:    {seg:5049,imp:11711,alc:2271,int:988, nseg:127,posts:3},
+      agosto:   {seg:5149,imp:3687, alc:3687,int:267, nseg:100,posts:1},
+      setiembre:{seg:5299,imp:6612, alc:3856,int:593, nseg:150,posts:1},
+      octubre:  {seg:5394,imp:3301, alc:1488,int:225, nseg:140,posts:1},
+      noviembre:{seg:5394,imp:960,  alc:221, int:58,  nseg:72,posts:0},
+      diciembre:{seg:5544,imp:1107, alc:324, int:67,  nseg:95,posts:1}
+    },
+    2025: {
+      enero:    {seg:5603,imp:3064, alc:1449,int:250,nseg:59,posts:0},
+      febrero:  {seg:5648,imp:944,  alc:311, int:69, nseg:45,posts:1},
+      marzo:    {seg:5692,imp:2333, alc:1122,int:199,nseg:40,posts:2},
+      abril:    {seg:5711,imp:2169, alc:1184,int:264,nseg:38,posts:2},
+      mayo:     {seg:5711,imp:5101, alc:2499,int:776,nseg:79,posts:3},
+      junio:    {seg:5741,imp:2772, alc:1355,int:319,nseg:30,posts:2},
+      julio:    {seg:5849,imp:889,  alc:214, int:43, nseg:48,posts:0},
+      agosto:   {seg:5940,imp:5382, alc:2438,int:676,nseg:31,posts:1},
+      setiembre:{seg:6000,imp:1431, alc:400, int:15, nseg:18,posts:1},
+      octubre:  {seg:6050,imp:599,  alc:200, int:8,  nseg:12,posts:0},
+      noviembre:{seg:6100,imp:459,  alc:150, int:3,  nseg:10,posts:0},
+      diciembre:{seg:6163,imp:479,  alc:160, int:3,  nseg:8, posts:0}
+    },
+    2026: {
+      enero:   {seg:6114,imp:478, alc:73, int:38, nseg:22,posts:0},
+      febrero: {seg:6136,imp:461, alc:68, int:17, nseg:22,posts:0},
+      marzo:   {seg:6165,imp:619, alc:82, int:22, nseg:29,posts:0},
+      abril:   {seg:6165,imp:2192,alc:975,int:258,nseg:41,posts:1}
+    }
+  }
+};
+
+// ─── WEB TRAFFIC DATA ──────────────────────────────────────────────────────
+const WEB_VISITS = {
+  2021:{enero:860,febrero:814,marzo:1417,abril:1616,mayo:2244,junio:1828,julio:1456,agosto:1472,setiembre:1804,octubre:2440,noviembre:1339,diciembre:5253},
+  2022:{enero:4429,febrero:3733,marzo:4273,abril:5158,mayo:9636,junio:4058,julio:4636,agosto:4353,setiembre:5247,octubre:5834,noviembre:6294,diciembre:6372},
+  2023:{enero:6415,febrero:5769,marzo:5629,abril:4465,mayo:3930,junio:3990,julio:3725,agosto:4038,setiembre:5221,octubre:4974,noviembre:4401,diciembre:4626},
+  2024:{enero:5056,febrero:4869,marzo:4490,abril:4506,mayo:4400,junio:4262,julio:4822,agosto:5021,setiembre:5125,octubre:5770,noviembre:5264,diciembre:5081},
+  2025:{enero:4965,febrero:4639,marzo:5542,abril:4616,mayo:4291,junio:5139,julio:5589,agosto:5613,setiembre:5650,octubre:5604,noviembre:5278,diciembre:5142},
+  2026:{enero:4818,febrero:4068,marzo:4331,abril:3641}
+};
+
+// GSC: {clics, impresiones, ctr (%), posMedia}
+const WEB_GSC = {
+  2026:{
+    enero:   {clics:334,imp:5603,ctr:6.0, posMedia:null},
+    febrero: {clics:266,imp:5483,ctr:4.9, posMedia:null},
+    marzo:   {clics:385,imp:7098,ctr:5.1, posMedia:null},
+    abril:   {clics:393,imp:7755,ctr:5.1, posMedia:1.47}
+  }
+};
+
+// GA4: {usuarios, nuevos, recurrentes, tIntMedio(s), sesIntPorUsuario, eventos, canales:[{nombre,usuarios,nuevos,pct}]}
+const WEB_GA4 = {
+  2026:{
+    enero:   {usuarios:722,nuevos:677,recurrentes:null,tIntMedio:null,eventos:null,canales:[]},
+    febrero: {usuarios:559,nuevos:519,recurrentes:null,tIntMedio:null,eventos:null,canales:[]},
+    marzo:   {usuarios:604,nuevos:571,recurrentes:null,tIntMedio:null,eventos:null,canales:[]},
+    abril:   {usuarios:547,nuevos:521,recurrentes:109,tIntMedio:40,sesInt:0.71,eventos:4210,
+      canales:[
+        {nombre:'Organic Search',usuarios:385,nuevos:360,pct:69.1},
+        {nombre:'Direct',usuarios:153,nuevos:142,pct:27.5},
+        {nombre:'Referral',usuarios:12,nuevos:12,pct:2.2},
+        {nombre:'Organic Social',usuarios:5,nuevos:5,pct:0.9},
+        {nombre:'Unassigned',usuarios:2,nuevos:2,pct:0.4}
+      ]}
+  }
+};
+
+// Top keywords GSC Abril 2026
+const WEB_KEYWORDS_ABRIL2026 = [
+  {kw:'pil peru',         clics:123,imp:356,  ctr:34.55,pos:1.47},
+  {kw:'pil peru sac',     clics:52, imp:136,  ctr:38.24,pos:1.01},
+  {kw:'pil',             clics:41, imp:1211, ctr:3.39, pos:2.39},
+  {kw:'pil perú',        clics:7,  imp:30,   ctr:23.33,pos:1.10},
+  {kw:'pil peru s.a.c.', clics:6,  imp:20,   ctr:30.00,pos:1.00},
+  {kw:'empresa pil',     clics:6,  imp:15,   ctr:40.00,pos:10.73},
+  {kw:'pil automation',  clics:4,  imp:17,   ctr:23.53,pos:3.65},
+  {kw:'pil empresa',     clics:4,  imp:14,   ctr:28.57,pos:2.71},
+  {kw:'pil peru ruc',    clics:3,  imp:40,   ctr:7.50, pos:2.02},
+  {kw:'pil numero de telefono',clics:2,imp:10,ctr:20.00,pos:2.00},
+  {kw:'empresas de electricidad industrial',clics:1,imp:35,ctr:2.86,pos:11.23},
+  {kw:'pacific international lines peru s.a.c.',clics:1,imp:11,ctr:9.09,pos:7.55},
+  {kw:'pilcorp',         clics:1,  imp:7,    ctr:14.29,pos:8.57},
+  {kw:'pilautomation',   clics:1,  imp:4,    ctr:25.00,pos:9.50},
+  {kw:'sigpol',          clics:0,  imp:1476, ctr:0.00, pos:6.13},
+  {kw:'pil en lima',     clics:0,  imp:525,  ctr:0.00, pos:6.44},
+  {kw:'pil lima',        clics:0,  imp:89,   ctr:0.00, pos:8.44},
+  {kw:'pil lima 2026',   clics:0,  imp:73,   ctr:0.00, pos:8.14},
+  {kw:'servicios de automatización',clics:0,imp:26,ctr:0.00,pos:29.54},
+  {kw:'endress hauser peru',clics:0,imp:24,  ctr:0.00, pos:11.17}
+];
+
+const MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','setiembre','octubre','noviembre','diciembre'];
+const MLBL   = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Set','Oct','Nov','Dic'];
+const BENCH_ALC=18, BENCH_INT=7.5;
+let activeTab='fb', charts={};
+
+function pct(a,b){return b>0?Math.round(a/b*1000)/10:0;}
+function getYear(){return document.getElementById('selYear').value;}
+function getMonth(){return document.getElementById('selMonth').value;}
+function scls(v,g){return v>=g?'bg':v>=g*.8?'ba':'br';}
+function stxt(v,g){return v>=g?'✓ Cumple meta':v>=g*.8?'⚠ Cerca':'✗ Por debajo';}
+function pbcol(v,g){return v>=g?'#10b981':v>=g*.8?'#f59e0b':'#ef4444';}
+function svCls(v,g){return v>=g?'sv-g':v>=g*.8?'sv-a':'sv-r';}
+function pill(v){return `<span class="pill ${v>=BENCH_INT?'pill-g':v>=BENCH_INT*.8?'pill-a':'pill-r'}">${v}%</span>`;}
+
+function populateMonths(){
+  const yr=getYear(), sel=document.getElementById('selMonth'), prev=sel.value;
+  const keys=Object.keys(DATA.fb[yr]||{});
+  sel.innerHTML=keys.map(m=>`<option value="${m}">${m.charAt(0).toUpperCase()+m.slice(1)}</option>`).join('');
+  sel.value=keys.includes(prev)?prev:keys[keys.length-1];
+}
+
+function buildPane(d, isLI){
+  if(!d||(!d.alc&&!d.imp&&!d.int)) return '<p style="padding:2rem;color:#aaa;text-align:center;background:#fff;border-radius:12px">Sin datos detallados para este período.</p>';
+  const alcPct=pct(d.alc,d.seg);
+  const intPct=isLI?(d.imp>0?pct(d.int,d.imp):0):(d.alc>0?pct(d.int,d.alc):0);
+  const intLbl=isLI?'Tasa interacción (int./imp.)':'Tasa interacción (int./alc.)';
+  const c=isLI?'li-card':'';
+  return `
+  <div class="sec">Indicadores del mes</div>
+  <div class="kpi-row">
+    <div class="kcard ${c}">
+      <div class="kcard-ico"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+      <div class="kcard-lbl">Seguidores</div>
+      <div class="kcard-val">${d.seg.toLocaleString()}</div>
+      ${d.nseg!=null?`<span class="badge bg">+${d.nseg} nuevos</span>`:''}
+    </div>
+    <div class="kcard ${c}">
+      <div class="kcard-ico"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+      <div class="kcard-lbl">Impresiones</div>
+      <div class="kcard-val">${d.imp!=null?d.imp.toLocaleString():'—'}</div>
+      <div class="kcard-sub">Total del período</div>
+    </div>
+    <div class="kcard ${c}">
+      <div class="kcard-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg></div>
+      <div class="kcard-lbl">Alcance</div>
+      <div class="kcard-val">${d.alc!=null?d.alc.toLocaleString():'—'}</div>
+      ${d.seg&&d.alc?`<span class="badge ${scls(alcPct,BENCH_ALC)}">${alcPct}% seg.</span>`:''}
+    </div>
+    <div class="kcard ${c}">
+      <div class="kcard-ico"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+      <div class="kcard-lbl">Interacciones</div>
+      <div class="kcard-val">${d.int!=null?d.int:'—'}</div>
+      <div class="kcard-sub">Clics · reacciones · compartir</div>
+    </div>
+    <div class="kcard ${c}">
+      <div class="kcard-ico"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg></div>
+      <div class="kcard-lbl">Posts</div>
+      <div class="kcard-val">${d.posts!=null?d.posts:'—'}</div>
+      ${d.posts!=null?`<span class="badge ${d.posts>=3?'bg':d.posts>=1?'ba':'br'}">${d.posts>=3?'Buena frecuencia':d.posts>=1?'Frecuencia baja':'Sin posts'}</span>`:''}
+    </div>
+  </div>
+  <div class="sec">Rendimiento vs benchmark</div>
+  <div class="bench-grid">
+    <div class="bcard">
+      <div class="bcard-lbl">Alcance / seguidores <span class="tip" data-tip="De cada 100 seguidores, ¿cuántos vieron el contenido? Se calcula: Alcance ÷ Seguidores totales. Meta: ≥ 18%">?</span></div>
+      <div class="bcard-nums"><div class="bcard-val">${alcPct}%</div><div class="bcard-tgt">meta ≥ ${BENCH_ALC}%</div></div>
+      <div class="pbar-bg"><div class="pbar" style="width:${Math.min(100,Math.round(alcPct/BENCH_ALC*100))}%;background:${pbcol(alcPct,BENCH_ALC)}"></div></div>
+      <span class="badge ${scls(alcPct,BENCH_ALC)}">${stxt(alcPct,BENCH_ALC)}</span>
+    </div>
+    <div class="bcard">
+      <div class="bcard-lbl">${intLbl} <span class="tip" data-tip="${isLI?'De cada 100 impresiones en LinkedIn, ¿cuántas generaron una interacción? Se calcula: Interacciones ÷ Impresiones. Meta: ≥ 7.5%':'De cada 100 personas que vieron el contenido en Facebook, ¿cuántas interactuaron? Se calcula: Interacciones ÷ Alcance. Meta: ≥ 7.5%'}">?</span></div>
+      <div class="bcard-nums"><div class="bcard-val">${intPct}%</div><div class="bcard-tgt">meta ≥ ${BENCH_INT}%</div></div>
+      <div class="pbar-bg"><div class="pbar" style="width:${Math.min(100,Math.round(intPct/BENCH_INT*100))}%;background:${pbcol(intPct,BENCH_INT)}"></div></div>
+      <span class="badge ${scls(intPct,BENCH_INT)}">${stxt(intPct,BENCH_INT)}</span>
+    </div>
+  </div>
+  <div class="sec">Análisis</div>
+  <div class="insights">
+    ${alcPct>=BENCH_ALC
+      ?`<div class="insight"><div class="iico ii-g">✓</div><div>Alcance orgánico <b>${alcPct}%</b> — supera el benchmark. Buena distribución natural del contenido.</div></div>`
+      :`<div class="insight"><div class="iico ii-a">⚠</div><div>Alcance del <b>${alcPct}%</b>, por debajo del objetivo ${BENCH_ALC}%. Publicar en horarios pico y usar contenido más visual puede mejorar este indicador.</div></div>`}
+    ${d.posts===0
+      ?`<div class="insight"><div class="iico ii-r">✗</div><div>Sin publicaciones este mes. La inactividad reduce el alcance orgánico y la presencia de marca.</div></div>`
+      :d.posts<3
+      ?`<div class="insight"><div class="iico ii-a">⚠</div><div>Solo <b>${d.posts}</b> publicación(es). Mínimo recomendado: 3–4 posts mensuales para mantener visibilidad.</div></div>`
+      :`<div class="insight"><div class="iico ii-g">✓</div><div><b>${d.posts}</b> publicaciones — buena frecuencia editorial. Mantener la consistencia refuerza el alcance orgánico.</div></div>`}
+    ${intPct>=BENCH_INT
+      ?`<div class="insight"><div class="iico ii-g">✓</div><div>Tasa de interacción <b>${intPct}%</b> — objetivo cumplido. Audiencia activa y comprometida.</div></div>`
+      :`<div class="insight"><div class="iico ii-r">✗</div><div>Tasa de interacción <b>${intPct}%</b> — por debajo del ${BENCH_INT}% objetivo. Usar preguntas, encuestas y llamadas a la acción mejora este KPI.</div></div>`}
+    ${d.nseg!=null?`<div class="insight"><div class="iico ii-b">i</div><div><b>+${d.nseg}</b> nuevos seguidores este mes. ${d.nseg>=40?'Crecimiento destacado.':d.nseg>=15?'Crecimiento moderado — mantener frecuencia.':'Crecimiento bajo — evaluar estrategia de captación.'}</div></div>`:''}
+  </div>`;
+}
+
+function buildComp(fbD,liD){
+  if(!fbD&&!liD) return '<p style="padding:2rem;color:#aaa;text-align:center">Sin datos para este período.</p>';
+  const fbAlc=fbD?pct(fbD.alc,fbD.seg):0;
+  const liAlc=liD?pct(liD.alc,liD.seg):0;
+  const fbInt=fbD&&fbD.alc>0?pct(fbD.int,fbD.alc):0;
+  const liInt=liD&&liD.imp>0?pct(liD.int,liD.imp):0;
+  return `
+  <div class="sec">Comparativo de plataformas</div>
+  <div class="comp-grid">
+    <div class="cplat">
+      <div class="cplat-hd"><span class="pdot" style="background:#1877f2"></span><span class="pname">Facebook</span><span style="margin-left:auto;font-size:11px;color:#aaa">${fbD?fbD.seg.toLocaleString():'—'} seg.</span></div>
+      ${fbD?`
+      <div class="srow"><span class="sk">Impresiones</span><span class="sv">${fbD.imp!=null?fbD.imp.toLocaleString():'—'}</span></div>
+      <div class="srow"><span class="sk">Alcance</span><span class="sv">${fbD.alc.toLocaleString()}</span></div>
+      <div class="srow"><span class="sk">Interacciones</span><span class="sv">${fbD.int}</span></div>
+      <div class="srow"><span class="sk">Nuevos seguidores</span><span class="sv">+${fbD.nseg}</span></div>
+      <div class="srow"><span class="sk">Posts</span><span class="sv">${fbD.posts}</span></div>
+      <div class="srow"><span class="sk">Alcance %</span><span class="${svCls(fbAlc,BENCH_ALC)}">${fbAlc}%</span></div>
+      <div class="srow"><span class="sk">Tasa interacción</span><span class="${svCls(fbInt,BENCH_INT)}">${fbInt}%</span></div>`:'<p style="color:#ccc;font-size:12px;padding:8px 0">Sin datos</p>'}
+    </div>
+    <div class="cplat">
+      <div class="cplat-hd"><span class="pdot" style="background:#0077b5"></span><span class="pname">LinkedIn</span><span style="margin-left:auto;font-size:11px;color:#aaa">${liD?liD.seg.toLocaleString():'—'} seg.</span></div>
+      ${liD&&liD.imp?`
+      <div class="srow"><span class="sk">Impresiones</span><span class="sv">${liD.imp.toLocaleString()}</span></div>
+      <div class="srow"><span class="sk">Alcance</span><span class="sv">${liD.alc.toLocaleString()}</span></div>
+      <div class="srow"><span class="sk">Interacciones</span><span class="sv">${liD.int}</span></div>
+      <div class="srow"><span class="sk">Nuevos seguidores</span><span class="sv">+${liD.nseg}</span></div>
+      <div class="srow"><span class="sk">Posts</span><span class="sv">${liD.posts}</span></div>
+      <div class="srow"><span class="sk">Alcance %</span><span class="${svCls(liAlc,BENCH_ALC)}">${liAlc}%</span></div>
+      <div class="srow"><span class="sk">Tasa interacción</span><span class="${svCls(liInt,BENCH_INT)}">${liInt}%</span></div>`:'<p style="color:#ccc;font-size:12px;padding:8px 0">Sin datos detallados para este período</p>'}
+    </div>
+  </div>
+  <div class="cbox">
+    <div class="cbox-title">Interacciones vs nuevos seguidores</div>
+    <div class="cbox-sub">Facebook y LinkedIn — mes seleccionado</div>
+    <div class="leg">
+      <span><i style="background:#1877f2"></i> FB interacciones</span>
+      <span><i style="background:#60a5fa"></i> FB nuevos seg.</span>
+      <span><i style="background:#0077b5"></i> LI interacciones</span>
+      <span><i style="background:#38bdf8"></i> LI nuevos seg.</span>
+    </div>
+    <div class="cw" style="height:220px"><canvas id="chartComp" role="img" aria-label="Comparativo interacciones y seguidores FB vs LI">Datos comparativos.</canvas></div>
+  </div>`;
+}
+
+function buildHist(yr){
+  const fbYr=DATA.fb[yr]||{}, liYr=DATA.li[yr]||{};
+  const months=Object.keys(fbYr);
+  const rows=months.map(m=>{
+    const fb=fbYr[m], li=liYr[m];
+    const fbI=fb&&fb.alc>0?pct(fb.int,fb.alc):0;
+    const liI=li&&li.imp>0?pct(li.int,li.imp):0;
+    return `<tr>
+      <td><b>${m.charAt(0).toUpperCase()+m.slice(1)}</b></td>
+      <td>${fb&&fb.alc!=null?fb.alc.toLocaleString():'<span class="no-data">—</span>'}</td>
+      <td>${fb&&fb.int!=null?fb.int:'<span class="no-data">—</span>'}</td>
+      <td>${fb&&fb.alc>0?pill(fbI):'<span class="no-data">—</span>'}</td>
+      <td>${fb?'+'+fb.nseg:'<span class="no-data">—</span>'}</td>
+      <td>${li&&li.alc!=null?li.alc.toLocaleString():'<span class="no-data">—</span>'}</td>
+      <td>${li&&li.int!=null?li.int:'<span class="no-data">—</span>'}</td>
+      <td>${li&&li.imp>0?pill(liI):'<span class="no-data">—</span>'}</td>
+      <td>${li&&li.nseg!=null?'+'+li.nseg:'<span class="no-data">—</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+  <div class="cbox">
+    <div class="cbox-title">Alcance mensual — ${yr}</div>
+    <div class="cbox-sub">Facebook vs LinkedIn</div>
+    <div class="leg"><span><i style="background:#1877f2"></i> Facebook</span><span><i style="background:#0077b5"></i> LinkedIn</span></div>
+    <div class="cw" style="height:230px"><canvas id="chartH1" role="img" aria-label="Alcance ${yr}">Alcance mensual.</canvas></div>
+  </div>
+  <div class="cbox">
+    <div class="cbox-title">Interacciones mensuales — ${yr}</div>
+    <div class="cbox-sub">Facebook vs LinkedIn</div>
+    <div class="leg"><span><i style="background:#1877f2"></i> Facebook</span><span><i style="background:#0077b5"></i> LinkedIn</span></div>
+    <div class="cw" style="height:230px"><canvas id="chartH2" role="img" aria-label="Interacciones ${yr}">Interacciones mensuales.</canvas></div>
+  </div>
+  <div class="sec">Tabla mensual — ${yr}</div>
+  <div class="tscroll">
+    <table>
+      <thead><tr>
+        <th>Mes</th>
+        <th>FB Alcance</th><th>FB Int.</th><th>FB Int%</th><th>FB +Seg.</th>
+        <th>LI Alcance</th><th>LI Int.</th><th>LI Int%</th><th>LI +Seg.</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+function buildWeb(yr, mo){
+  const visits = WEB_VISITS[yr]&&WEB_VISITS[yr][mo];
+  const prevYrVisits = WEB_VISITS[yr-1]&&WEB_VISITS[yr-1][mo];
+  const visitsDelta = (visits&&prevYrVisits)?Math.round((visits-prevYrVisits)/prevYrVisits*1000)/10:null;
+
+  const gsc = WEB_GSC[yr]&&WEB_GSC[yr][mo];
+  const ga4 = WEB_GA4[yr]&&WEB_GA4[yr][mo];
+  const kws = (yr==2026&&mo=='abril') ? WEB_KEYWORDS_ABRIL2026 : null;
+
+  // visits history for chart (current year)
+  const yrVisits = WEB_VISITS[yr]||{};
+  const prevYrVisitsAll = WEB_VISITS[yr-1]||{};
+  const months = Object.keys(yrVisits);
+  const visitLabels = months.map(m=>m.charAt(0).toUpperCase()+m.slice(1,3));
+
+  // Annual totals for summary
+  const totals = [2021,2022,2023,2024,2025,2026].map(y=>{
+    const d=WEB_VISITS[y]||{};
+    const t=Object.values(d).reduce((s,v)=>s+v,0);
+    const prev=WEB_VISITS[y-1];
+    const prevT=prev?Object.values(prev).reduce((s,v)=>s+v,0):null;
+    const delta=prevT?Math.round((t-prevT)/prevT*1000)/10:null;
+    return {y,t,delta};
+  });
+
+  const deltaClass = d => d===null?'':(d>=0?'delta-g':'delta-r');
+  const deltaStr  = d => d===null?'—':(d>=0?`+${d}%`:`${d}%`);
+
+  const chanColors = ['#4285f4','#34a853','#ea4335','#fbbc05','#9aa0a6'];
+
+  return `
+  <div class="sec">Tráfico web — pil.com.pe</div>
+  <div class="web-kpi-row">
+    <div class="wcard">
+      <div class="wcard-ico">👁</div>
+      <div class="wcard-lbl">Visitas ${mo.charAt(0).toUpperCase()+mo.slice(1)} ${yr}</div>
+      <div class="wcard-val">${visits?visits.toLocaleString():'—'}</div>
+      <div class="wcard-sub ${deltaClass(visitsDelta)}">${visitsDelta!==null?deltaStr(visitsDelta)+' vs '+parseInt(yr-1):'Sin comparativa'}</div>
+    </div>
+    <div class="wcard">
+      <div class="wcard-ico">🖱</div>
+      <div class="wcard-lbl">Clics orgánicos GSC</div>
+      <div class="wcard-val">${gsc?gsc.clics:'—'}</div>
+      <div class="wcard-sub delta-n">${gsc?gsc.imp.toLocaleString()+' impresiones':''}</div>
+    </div>
+    <div class="wcard">
+      <div class="wcard-ico">📊</div>
+      <div class="wcard-lbl">CTR orgánico</div>
+      <div class="wcard-val">${gsc?(+gsc.ctr).toFixed(2)+'%':'—'}</div>
+      <div class="wcard-sub ${gsc&&gsc.ctr>=5?'delta-g':'delta-n'}">${gsc&&gsc.ctr>=5?'Por encima del promedio':gsc?'Promedio industria ~5%':''}</div>
+    </div>
+    <div class="wcard">
+      <div class="wcard-ico">👤</div>
+      <div class="wcard-lbl">Usuarios GA4</div>
+      <div class="wcard-val">${ga4?ga4.usuarios:'—'}</div>
+      <div class="wcard-sub delta-n">${ga4?ga4.nuevos+' nuevos ('+Math.round(ga4.nuevos/ga4.usuarios*100)+'%)':''}</div>
+    </div>
+  </div>
+
+  <div class="sec">Evolución de visitas ${yr}</div>
+  <div class="cbox">
+    <div class="cbox-title">Visitas mensuales — ${yr} vs ${yr-1}</div>
+    <div class="cbox-sub">www.pil.com.pe · Google Analytics</div>
+    <div class="leg">
+      <span><i style="background:#4285f4"></i> ${yr}</span>
+      <span><i style="background:#bbb"></i> ${yr-1}</span>
+    </div>
+    <div class="cw" style="height:230px"><canvas id="chartWebVisits" role="img" aria-label="Visitas web ${yr}">Visitas mensuales.</canvas></div>
+  </div>
+
+  ${gsc?`
+  <div class="sec">Google Search Console — ${mo.charAt(0).toUpperCase()+mo.slice(1)} ${yr}</div>
+  <div class="cbox">
+    <div class="cbox-title">Clics e impresiones por mes — ${yr}</div>
+    <div class="cbox-sub">Búsqueda orgánica · Google Search Console</div>
+    <div class="leg">
+      <span><i style="background:#4285f4"></i> Clics</span>
+      <span><i style="background:#ea4335"></i> Impresiones</span>
+    </div>
+    <div class="cw" style="height:220px"><canvas id="chartGSC" role="img" aria-label="GSC clics e impresiones ${yr}">Clics e impresiones GSC.</canvas></div>
+  </div>`:''}
+
+  ${ga4&&ga4.canales.length?`
+  <div class="sec">Fuentes de tráfico GA4 — ${mo.charAt(0).toUpperCase()+mo.slice(1)} ${yr}</div>
+  <div class="channel-grid">
+    ${ga4.canales.map((c,i)=>`
+    <div class="chan-card">
+      <div class="chan-name"><span>${c.nombre}</span><span style="font-size:10px;color:#888">${c.usuarios} usuarios</span></div>
+      <div class="chan-pct-big">${c.pct}%</div>
+      <div class="chan-sub">${c.nuevos} usuarios nuevos</div>
+      <div class="chan-bar-bg"><div class="chan-bar-fill" style="width:${c.pct}%;background:${chanColors[i]||'#888'}"></div></div>
+    </div>`).join('')}
+  </div>
+  <div class="cbox" style="margin-bottom:16px">
+    <div class="cbox-title">Métricas de sesión — GA4</div>
+    <div class="cbox-sub">Comportamiento de usuarios · ${mo.charAt(0).toUpperCase()+mo.slice(1)} ${yr}</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:4px">
+      <div style="background:#f9f9f9;border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Tiempo interacción</div>
+        <div style="font-size:20px;font-weight:700;color:#1a1a2e">${ga4.tIntMedio}s</div>
+        <div style="font-size:11px;color:#888">por usuario activo</div>
+      </div>
+      <div style="background:#f9f9f9;border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Sesiones / usuario</div>
+        <div style="font-size:20px;font-weight:700;color:#1a1a2e">${ga4.sesInt}</div>
+        <div style="font-size:11px;color:#888">promedio</div>
+      </div>
+      <div style="background:#f9f9f9;border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Total eventos</div>
+        <div style="font-size:20px;font-weight:700;color:#1a1a2e">${ga4.eventos.toLocaleString()}</div>
+        <div style="font-size:11px;color:#888">todos los eventos</div>
+      </div>
+    </div>
+  </div>`:''}
+
+  ${kws?`
+  <div class="sec">Top keywords — Google Search Console · ${mo.charAt(0).toUpperCase()+mo.slice(1)} ${yr}</div>
+  <div class="cbox">
+    <div class="cbox-title">Consultas de búsqueda orgánica</div>
+    <div class="cbox-sub">Fuente: Google Search Console · Abril 2026</div>
+    <div style="overflow-x:auto">
+    <table class="kw-table">
+      <thead><tr><th>#</th><th>Consulta</th><th>Clics</th><th>Impresiones</th><th>CTR</th><th>Pos.</th></tr></thead>
+      <tbody>
+        ${kws.map((k,i)=>{
+          const posTag = k.pos<=2?'pos-1':k.pos<=5?'pos-top':'pos-mid';
+          const isOpp  = k.clics===0 && k.imp>=100;
+          return `<tr>
+            <td>${i+1}</td>
+            <td>${k.kw}${isOpp?'<span class="opp-badge">SEO OPP.</span>':''}</td>
+            <td style="font-weight:${k.clics>0?700:400};color:${k.clics>0?'#1a1a2e':'#aaa'}">${k.clics}</td>
+            <td>${k.imp.toLocaleString()}</td>
+            <td>${k.ctr>0?(+k.ctr).toFixed(2)+'%':'<span style="color:#ccc">0%</span>'}</td>
+            <td><span class="pos-tag ${posTag}">${k.pos}</span></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    </div>
+    <div style="background:#e6f1fb;border-radius:8px;padding:10px 14px;margin-top:12px;font-size:12px;color:#0c447c">
+      <b>Oportunidades SEO detectadas:</b> "sigpol" (1,476 imp. / 0 clics), "pil en lima" (525 imp. / 0 clics) — keywords con alta visibilidad pero CTR 0%. Crear landing pages específicas puede capturar ese tráfico.
+    </div>
+  </div>`:''}
+
+  <div class="sec">Resumen anual de visitas</div>
+  <div class="cbox">
+    <div class="cbox-title">Visitas totales por año — 2021 a 2026</div>
+    <div class="cbox-sub">Totales anuales acumulados · pil.com.pe</div>
+    <div class="cw" style="height:220px"><canvas id="chartWebAnual" role="img" aria-label="Visitas anuales historico">Visitas anuales históricas.</canvas></div>
+  </div>
+  `;
+}
+
+function buildMulti(){
+  const years=['2021','2022','2023','2024','2025','2026'];
+  // Aggregate: total interactions per year for each platform, total new followers
+  const summary=years.map(yr=>{
+    const fb=DATA.fb[yr]||{}, li=DATA.li[yr]||{};
+    const months=Object.keys(fb);
+    const fbTotInt=months.reduce((s,m)=>s+(fb[m]&&fb[m].int||0),0);
+    const liTotInt=months.reduce((s,m)=>s+(li[m]&&li[m].int||0),0);
+    const fbTotAlc=months.reduce((s,m)=>s+(fb[m]&&fb[m].alc||0),0);
+    const liTotAlc=months.reduce((s,m)=>s+(li[m]&&li[m].alc||0),0);
+    const fbNseg=months.reduce((s,m)=>s+(fb[m]&&fb[m].nseg||0),0);
+    const liNseg=months.reduce((s,m)=>s+(li[m]&&li[m].nseg||0),0);
+    const fbEndSeg=fb[months[months.length-1]]?fb[months[months.length-1]].seg:null;
+    const liEndSeg=li[months[months.length-1]]?li[months[months.length-1]].seg:null;
+    const n=months.length;
+    return {yr,fbTotInt,liTotInt,fbTotAlc,liTotAlc,fbNseg,liNseg,fbEndSeg,liEndSeg,n};
+  });
+
+  return `
+  <div class="sec">Evolución multianual — seguidores a cierre de período</div>
+  <div class="cbox">
+    <div class="cbox-title">Crecimiento de seguidores 2021–2026</div>
+    <div class="cbox-sub">Facebook y LinkedIn — cierre de cada año</div>
+    <div class="leg"><span><i style="background:#1877f2"></i> Facebook</span><span><i style="background:#0077b5"></i> LinkedIn</span></div>
+    <div class="cw" style="height:240px"><canvas id="chartM1" role="img" aria-label="Seguidores multianual">Evolución de seguidores.</canvas></div>
+  </div>
+  <div class="cbox">
+    <div class="cbox-title">Total interacciones anuales 2021–2026</div>
+    <div class="cbox-sub">Suma de interacciones de todos los meses del año</div>
+    <div class="leg"><span><i style="background:#1877f2"></i> Facebook</span><span><i style="background:#0077b5"></i> LinkedIn</span></div>
+    <div class="cw" style="height:240px"><canvas id="chartM2" role="img" aria-label="Interacciones anuales">Total interacciones por año.</canvas></div>
+  </div>
+  <div class="sec">Resumen por año</div>
+  <div class="tscroll">
+    <table>
+      <thead><tr>
+        <th>Año</th>
+        <th>FB Seg. cierre <span class="tip" data-tip="Total de seguidores de Facebook al último mes registrado del año">?</span></th>
+        <th>FB Int. total <span class="tip" data-tip="Suma de todas las interacciones de Facebook del año (clics + reacciones + comentarios + compartidos)">?</span></th>
+        <th>FB Alc. total <span class="tip" data-tip="Suma del alcance mensual de Facebook durante todo el año (personas únicas que vieron el contenido)">?</span></th>
+        <th>FB +Seg. <span class="tip" data-tip="Total de nuevos seguidores ganados en Facebook durante el año">?</span></th>
+        <th>LI Seg. cierre <span class="tip" data-tip="Total de seguidores de LinkedIn al último mes registrado del año">?</span></th>
+        <th>LI Int. total <span class="tip" data-tip="Suma de todas las interacciones de LinkedIn del año (reacciones + comentarios + compartidos)">?</span></th>
+        <th>LI Alc. total <span class="tip" data-tip="Suma del alcance mensual de LinkedIn durante todo el año">?</span></th>
+        <th>LI +Seg. <span class="tip" data-tip="Total de nuevos seguidores ganados en LinkedIn durante el año">?</span></th>
+      </tr></thead>
+      <tbody>
+        ${summary.map(s=>`<tr>
+          <td><b>${s.yr}</b></td>
+          <td>${s.fbEndSeg?s.fbEndSeg.toLocaleString():'—'}</td>
+          <td>${s.fbTotInt.toLocaleString()}</td>
+          <td>${s.fbTotAlc.toLocaleString()}</td>
+          <td>+${s.fbNseg}</td>
+          <td>${s.liEndSeg?s.liEndSeg.toLocaleString():'—'}</td>
+          <td>${s.liTotInt.toLocaleString()}</td>
+          <td>${s.liTotAlc.toLocaleString()}</td>
+          <td>+${s.liNseg}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function dc(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+
+function renderChartComp(fbD,liD){
+  dc('comp');
+  const c=document.getElementById('chartComp'); if(!c)return;
+  charts['comp']=new Chart(c,{type:'bar',data:{
+    labels:['Interacciones','Nuevos seguidores'],
+    datasets:[
+      {label:'Facebook',data:[fbD?fbD.int:0,fbD?fbD.nseg:0],backgroundColor:'#1877f2',borderRadius:5,borderSkipped:false},
+      {label:'LinkedIn',data:[liD&&liD.int?liD.int:0,liD&&liD.nseg?liD.nseg:0],backgroundColor:'#0077b5',borderRadius:5,borderSkipped:false}
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,0.04)'}}}}});
+}
+
+function renderChartsHist(yr){
+  const fbYr=DATA.fb[yr]||{}, liYr=DATA.li[yr]||{};
+  const months=Object.keys(fbYr);
+  const lbl=months.map(m=>m.charAt(0).toUpperCase()+m.slice(1,3));
+  dc('h1');dc('h2');
+  const c1=document.getElementById('chartH1');
+  if(c1) charts['h1']=new Chart(c1,{type:'line',data:{labels:lbl,datasets:[
+    {label:'FB',data:months.map(m=>fbYr[m]?fbYr[m].alc:null),borderColor:'#1877f2',backgroundColor:'rgba(24,119,242,.07)',tension:.35,pointRadius:4,pointBackgroundColor:'#1877f2',fill:true,spanGaps:true},
+    {label:'LI',data:months.map(m=>liYr[m]&&liYr[m].alc?liYr[m].alc:null),borderColor:'#0077b5',backgroundColor:'rgba(0,119,181,.07)',tension:.35,pointRadius:4,pointBackgroundColor:'#0077b5',fill:true,spanGaps:true,borderDash:[5,3]}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:45,font:{size:11}}},y:{grid:{color:'rgba(0,0,0,0.04)'}}}}});
+  const c2=document.getElementById('chartH2');
+  if(c2) charts['h2']=new Chart(c2,{type:'bar',data:{labels:lbl,datasets:[
+    {label:'FB',data:months.map(m=>fbYr[m]?fbYr[m].int:null),backgroundColor:'#1877f2',borderRadius:4,borderSkipped:false},
+    {label:'LI',data:months.map(m=>liYr[m]&&liYr[m].int?liYr[m].int:null),backgroundColor:'#0077b5',borderRadius:4,borderSkipped:false}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:45,font:{size:11}}},y:{grid:{color:'rgba(0,0,0,0.04)'}}}}});
+}
+
+function renderChartsMulti(){
+  dc('m1');dc('m2');
+  const years=['2021','2022','2023','2024','2025','2026'];
+  const fbSeg=years.map(yr=>{const fb=DATA.fb[yr]||{};const ms=Object.keys(fb);return ms.length?fb[ms[ms.length-1]].seg:null;});
+  const liSeg=years.map(yr=>{const li=DATA.li[yr]||{};const ms=Object.keys(li);return ms.length&&li[ms[ms.length-1]].seg?li[ms[ms.length-1]].seg:null;});
+  const fbInt=years.map(yr=>Object.values(DATA.fb[yr]||{}).reduce((s,d)=>s+(d.int||0),0));
+  const liInt=years.map(yr=>Object.values(DATA.li[yr]||{}).reduce((s,d)=>s+(d.int||0),0));
+  const c1=document.getElementById('chartM1');
+  if(c1) charts['m1']=new Chart(c1,{type:'line',data:{labels:years,datasets:[
+    {label:'Facebook',data:fbSeg,borderColor:'#1877f2',backgroundColor:'rgba(24,119,242,.08)',tension:.35,pointRadius:6,pointBackgroundColor:'#1877f2',fill:true},
+    {label:'LinkedIn',data:liSeg,borderColor:'#0077b5',backgroundColor:'rgba(0,119,181,.08)',tension:.35,pointRadius:6,pointBackgroundColor:'#0077b5',fill:true,borderDash:[5,3]}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,0.04)'}}}}});
+  const c2=document.getElementById('chartM2');
+  if(c2) charts['m2']=new Chart(c2,{type:'bar',data:{labels:years,datasets:[
+    {label:'Facebook',data:fbInt,backgroundColor:'#1877f2',borderRadius:6,borderSkipped:false},
+    {label:'LinkedIn',data:liInt,backgroundColor:'#0077b5',borderRadius:6,borderSkipped:false}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,0.04)'}}}}});
+}
+
+function renderChartsWeb(yr, mo){
+  dc('webVisits'); dc('gsc'); dc('webAnual');
+
+  // Visits current vs prev year
+  const yrV=WEB_VISITS[yr]||{}, prevV=WEB_VISITS[yr-1]||{};
+  const months=Object.keys(yrV);
+  const lbl=months.map(m=>m.charAt(0).toUpperCase()+m.slice(1,3));
+  const cWV=document.getElementById('chartWebVisits');
+  if(cWV) charts['webVisits']=new Chart(cWV,{type:'bar',data:{labels:lbl,datasets:[
+    {label:String(yr),data:months.map(m=>yrV[m]||null),backgroundColor:'#4285f4',borderRadius:5,borderSkipped:false},
+    {label:String(yr-1),data:months.map(m=>prevV[m]||null),backgroundColor:'#dadce0',borderRadius:5,borderSkipped:false}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:45,font:{size:11}}},
+            y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11}}}}}});
+
+  // GSC chart (all available months in year)
+  const gscYr=WEB_GSC[yr]||{};
+  const gscMonths=Object.keys(gscYr);
+  if(gscMonths.length){
+    const cGSC=document.getElementById('chartGSC');
+    if(cGSC) charts['gsc']=new Chart(cGSC,{type:'bar',data:{
+      labels:gscMonths.map(m=>m.charAt(0).toUpperCase()+m.slice(1,3)),
+      datasets:[
+        {label:'Clics',data:gscMonths.map(m=>gscYr[m].clics),backgroundColor:'#4285f4',borderRadius:5,borderSkipped:false,yAxisID:'y'},
+        {label:'Impresiones',data:gscMonths.map(m=>gscYr[m].imp),backgroundColor:'#ea4335',borderRadius:5,borderSkipped:false,yAxisID:'y1'}
+      ]
+    },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:11}}},
+        y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11}},position:'left'},
+        y1:{grid:{display:false},ticks:{font:{size:11}},position:'right'}
+      }}});
+  }
+
+  // Annual totals chart
+  const years=[2021,2022,2023,2024,2025,2026];
+  const annualTotals=years.map(y=>{
+    const d=WEB_VISITS[y]||{};
+    return Object.values(d).reduce((s,v)=>s+v,0);
+  });
+  const cAnual=document.getElementById('chartWebAnual');
+  if(cAnual) charts['webAnual']=new Chart(cAnual,{type:'bar',data:{
+    labels:years.map(String),
+    datasets:[{label:'Visitas',data:annualTotals,
+      backgroundColor:years.map(y=>y==yr?'#4285f4':'#b0c4de'),
+      borderRadius:6,borderSkipped:false}]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11},callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}}}});
+}
+
+function render(){
+  const yr=getYear(), mo=getMonth();
+  const fbD=DATA.fb[yr]&&DATA.fb[yr][mo];
+  const liD=DATA.li[yr]&&DATA.li[yr][mo];
+  document.getElementById('pane-fb').innerHTML=buildPane(fbD,false);
+  document.getElementById('pane-li').innerHTML=buildPane(liD,true);
+  document.getElementById('pane-comp').innerHTML=buildComp(fbD,liD);
+  document.getElementById('pane-web').innerHTML=buildWeb(yr,mo);
+  document.getElementById('pane-hist').innerHTML=buildHist(yr);
+  document.getElementById('pane-multi').innerHTML=buildMulti();
+  if(activeTab==='comp'&&(fbD||liD)) setTimeout(()=>renderChartComp(fbD,liD),60);
+  if(activeTab==='web') setTimeout(()=>renderChartsWeb(yr,mo),60);
+  if(activeTab==='hist') setTimeout(()=>renderChartsHist(yr),60);
+  if(activeTab==='multi') setTimeout(()=>renderChartsMulti(),60);
+  if(activeTab==='grilla') renderGrilla();
+}
+
+function switchTab(tab,btn){
+  ['fb','li','comp','web','hist','multi','grilla'].forEach(t=>document.getElementById('pane-'+t).style.display='none');
+  document.getElementById('pane-'+tab).style.display='block';
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  activeTab=tab;
+  const yr=getYear(), mo=getMonth();
+  if(tab==='comp'){const fb=DATA.fb[yr]&&DATA.fb[yr][mo],li=DATA.li[yr]&&DATA.li[yr][mo];setTimeout(()=>renderChartComp(fb,li),60);}
+  if(tab==='web') setTimeout(()=>renderChartsWeb(yr,mo),60);
+  if(tab==='hist') setTimeout(()=>renderChartsHist(yr),60);
+  if(tab==='multi') setTimeout(()=>renderChartsMulti(),60);
+  if(tab==='grilla') renderGrilla();
+}
+
+function onYearChange(){populateMonths();render();}
+
+
+// ─── JSONP LOADER — bypasses CORS from GitHub Pages ──────────────────────
+const AS_URL = "https://script.google.com/macros/s/AKfycbxPPGBtMX5_QG-jvcHWvgIKaCNdCyMTFCbmLiGoUUJG3Ix-LsEPgJvw2rt4Cmy5NM5NJg/exec";
+const SHEETS_TO_LOAD = ['Facebook_KPIs', 'LinkedIn_KPIs', 'Web_Visitas', 'GSC_SearchConsole', 'GA4_Analytics', 'GSC_Keywords', 'Grilla_Contenidos'];
+
+function fetchSheetJSONP(sheetName) {
+  return new Promise((resolve, reject) => {
+    const cbName = '_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error('Timeout: ' + sheetName));
+    }, 20000);
+
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cbName];
+      if(script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[cbName] = function(data) {
+      cleanup();
+      resolve(data);
+    };
+
+    // Apps Script supports callback param via URL
+    script.src = AS_URL + '?sheet=' + encodeURIComponent(sheetName) + '&callback=' + cbName;
+    script.onerror = function() { cleanup(); reject(new Error('Script error: ' + sheetName)); };
+    document.head.appendChild(script);
+  });
+}
+
+function n(v) {
+  if(v===null||v===undefined||v==='') return null;
+  if(typeof v==='number') return isNaN(v)?null:v;
+  const x = parseFloat(String(v).replace(/,/g,'.').replace(/[^\d.-]/g,''));
+  return isNaN(x)?null:x;
+}
+
+function normM(v) {
+  if(!v) return null;
+  return String(v).toLowerCase().trim()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/\s+/g,'');
+}
+
+async function loadAll() {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLbl');
+  const ov  = document.getElementById('ov');
+  dot.className = 'sync-dot spin';
+  lbl.textContent = 'Actualizando desde Google Sheets...';
+  ov.style.display = 'flex';
+
+  try {
+    // ── Limpiar datos locales antes de cargar — así los borrados se reflejan ──
+    Object.keys(DATA.fb).forEach(yr => { DATA.fb[yr] = {}; });
+    Object.keys(DATA.li).forEach(yr => { DATA.li[yr] = {}; });
+    Object.keys(WEB_VISITS).forEach(yr => { delete WEB_VISITS[yr]; });
+    Object.keys(WEB_GSC).forEach(yr => { delete WEB_GSC[yr]; });
+    Object.keys(WEB_GA4).forEach(yr => { delete WEB_GA4[yr]; });
+    window.KW_DATA = {};
+
+    // ── Facebook ──────────────────────────────────────────────────────
+    const fbRaw = await fetchSheetJSONP('Facebook_KPIs');
+    if(!Array.isArray(fbRaw)) throw new Error('Facebook_KPIs: ' + (fbRaw.error || JSON.stringify(fbRaw)));
+    const fbRows = fbRaw;
+    fbRows.slice(3).forEach(r => {
+      const yr=parseInt(r[0]), mes=normM(r[1]);
+      if(!yr||!mes) return;
+      const seg=n(r[2]),imp=n(r[3]),alc=n(r[4]),int=n(r[5]),nseg=n(r[6]),posts=n(r[7]);
+      if(seg===null&&alc===null) return;
+      if(!DATA.fb[yr]) DATA.fb[yr]={};
+      DATA.fb[yr][mes]={seg,imp,alc,int,nseg,posts};
+    });
+
+    // ── LinkedIn ──────────────────────────────────────────────────────
+    const liRaw = await fetchSheetJSONP('LinkedIn_KPIs');
+    if(!Array.isArray(liRaw)) throw new Error('LinkedIn_KPIs: ' + (liRaw.error || JSON.stringify(liRaw)));
+    const liRows = liRaw;
+    liRows.slice(3).forEach(r => {
+      const yr=parseInt(r[0]), mes=normM(r[1]);
+      if(!yr||!mes) return;
+      const seg=n(r[2]),imp=n(r[3]),alc=n(r[4]),int=n(r[5]),nseg=n(r[6]),posts=n(r[7]);
+      if(seg===null&&alc===null) return;
+      if(!DATA.li[yr]) DATA.li[yr]={};
+      DATA.li[yr][mes]={seg,imp,alc,int,nseg,posts};
+    });
+
+    // ── Web Visitas ───────────────────────────────────────────────────
+    const webRaw = await fetchSheetJSONP('Web_Visitas');
+    if(!Array.isArray(webRaw)) throw new Error('Web_Visitas: ' + (webRaw.error || JSON.stringify(webRaw)));
+    const webRows = webRaw;
+    const webHdr = webRows[1]||[];
+    webRows.slice(2).forEach(r => {
+      const mes=normM(r[0]);
+      if(!mes||mes==='total') return;
+      [1,2,3,4,5,6].forEach(col => {
+        const yr=parseInt(webHdr[col]);
+        const val=n(r[col]);
+        if(!yr||val===null||val===0) return;
+        if(!WEB_VISITS[yr]) WEB_VISITS[yr]={};
+        WEB_VISITS[yr][mes]=val;
+      });
+    });
+
+    // ── GSC ───────────────────────────────────────────────────────────
+    const gscRaw = await fetchSheetJSONP('GSC_SearchConsole');
+    if(!Array.isArray(gscRaw)) throw new Error('GSC_SearchConsole: ' + (gscRaw.error || JSON.stringify(gscRaw)));
+    const gscRows = gscRaw;
+    gscRows.slice(2).forEach(r => {
+      const yr=parseInt(r[0]), mes=normM(r[1]);
+      if(!yr||!mes||n(r[2])===null) return;
+      if(!WEB_GSC[yr]) WEB_GSC[yr]={};
+      WEB_GSC[yr][mes]={clics:n(r[2]),imp:n(r[3]),ctr:n(r[4]),posMedia:n(r[5])};
+    });
+
+    // ── GA4 ───────────────────────────────────────────────────────────
+    const ga4Raw = await fetchSheetJSONP('GA4_Analytics');
+    if(!Array.isArray(ga4Raw)) throw new Error('GA4_Analytics: ' + (ga4Raw.error || JSON.stringify(ga4Raw)));
+    const ga4Rows = ga4Raw;
+    ga4Rows.slice(2).forEach(r => {
+      const yr=parseInt(r[0]), mes=normM(r[1]);
+      if(!yr||!mes||n(r[2])===null) return;
+      if(!WEB_GA4[yr]) WEB_GA4[yr]={};
+      const prev=(WEB_GA4[yr][mes])||{};
+      WEB_GA4[yr][mes]={
+        usuarios:n(r[2]),nuevos:n(r[3]),recurrentes:n(r[4]),
+        tIntMedio:n(r[6]),sesInt:n(r[7]),eventos:n(r[8]),
+        canales:prev.canales||[]
+      };
+    });
+
+    // ── Keywords ──────────────────────────────────────────────────────
+    const kwRaw = await fetchSheetJSONP('GSC_Keywords');
+    if(!Array.isArray(kwRaw)) throw new Error('GSC_Keywords: ' + (kwRaw.error || JSON.stringify(kwRaw)));
+    const kwRows = kwRaw;
+    window.KW_DATA={};
+    kwRows.slice(2).forEach(r => {
+      const yr=parseInt(r[0]), mes=normM(r[1]);
+      if(!yr||!mes||!r[2]) return;
+      const key=yr+'_'+mes;
+      if(!KW_DATA[key]) KW_DATA[key]=[];
+      KW_DATA[key].push({kw:String(r[2]),clics:n(r[3])||0,imp:n(r[4])||0,ctr:n(r[5])||0,pos:n(r[6])||0});
+    });
+
+
+    // ── Grilla de Contenidos ──────────────────────────────────────────────
+    try {
+      const grRows = await fetchSheetJSONP('Grilla_Contenidos');
+      // Find header row (contains "Fecha")
+      let hdrIdx = grRows.findIndex(r => r.some(c => String(c).includes('Fecha')));
+      if (hdrIdx >= 0) {
+        const dataRows = grRows.slice(hdrIdx + 1);
+        const loaded = [];
+        dataRows.forEach(r => {
+          // Skip section separator rows (N° is not a number)
+          if (!r[0] || isNaN(parseInt(r[0]))) return;
+          const fechaRaw = r[1];
+          let fecha = '';
+          if (fechaRaw instanceof Date) {
+            fecha = fechaRaw.toISOString().slice(0,10);
+          } else if (fechaRaw) {
+            fecha = String(fechaRaw).slice(0,10);
+          }
+          loaded.push({
+            n:         parseInt(r[0]),
+            fecha:     fecha,
+            dia:       String(r[2]||''),
+            semana:    String(r[3]||''),
+            mes:       String(r[4]||''),
+            categoria: String(r[5]||''),
+            tema:      String(r[6]||''),
+            formato:   String(r[7]||''),
+            red:       String(r[8]||''),
+            estado:    String(r[9]||'Pendiente'),
+            obs:       String(r[11]||''),
+            _sheetRow: grRows.indexOf(r) + 1  // 1-indexed for Sheets API writes
+          });
+        });
+        if (loaded.length > 0) {
+          // Replace hardcoded data with live data from Sheets
+          GRILLA_POSTS.length = 0;
+          loaded.forEach(p => GRILLA_POSTS.push(p));
+          console.log('Grilla loaded from Sheets:', loaded.length, 'posts');
+        }
+      }
+    } catch(grErr) {
+      console.warn('Grilla load error (using local data):', grErr.message);
+    }
+
+    // ── Update year selector ──────────────────────────────────────────
+    const allYrs=[...new Set([
+      ...Object.keys(DATA.fb).map(Number),
+      ...Object.keys(DATA.li).map(Number),
+      ...Object.keys(WEB_VISITS).map(Number)
+    ])].sort((a,b)=>b-a);
+    const sel=document.getElementById('selYear');
+    const existing=[...sel.options].map(o=>parseInt(o.value));
+    allYrs.forEach(yr => {
+      if(!existing.includes(yr)){
+        const o=document.createElement('option');
+        o.value=yr; o.textContent=yr;
+        sel.insertBefore(o,sel.options[0]);
+      }
+    });
+
+    // ── Success ───────────────────────────────────────────────────────
+    dot.className='sync-dot';
+    lbl.textContent='✓ Datos actualizados desde Google Sheets';
+    document.getElementById('syncTime').textContent=
+      'Última actualización: '+new Date().toLocaleString('es-PE');
+    ov.style.display='none';
+    populateMonths();
+    render();
+
+  } catch(err) {
+    console.error('loadAll error:',err);
+    dot.className='sync-dot err';
+    lbl.textContent='✗ Error: '+err.message;
+    document.getElementById('syncTime').textContent='Usando datos locales como respaldo · Verifica el Apps Script y el Spreadsheet ID';
+    ov.style.display='none';
+    populateMonths();
+    render();
+  }
+}
+
+
+// ─── GRILLA DE CONTENIDOS DATA ─────────────────────────────────────────────
+const GRILLA_POSTS = [{"n": 1, "fecha": "2026-05-04", "dia": "Lunes", "semana": "Sem 1", "mes": "Mayo", "categoria": "Efeméride", "tema": "📅 Día de la Madre – Saludamos a todas las madres de PIL Perú", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 2, "fecha": "2026-05-06", "dia": "Miércoles", "semana": "Sem 1", "mes": "Mayo", "categoria": "Actividad PIL", "tema": "Capacitación interna: Seguridad eléctrica en campo", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 3, "fecha": "2026-05-08", "dia": "Viernes", "semana": "Sem 1", "mes": "Mayo", "categoria": "Proyecto/Servicio", "tema": "Proyecto destacado: Automatización de tableros en planta minera – resultados alcanzados", "formato": "Carrusel de imágenes", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 4, "fecha": "2026-05-11", "dia": "Lunes", "semana": "Sem 2", "mes": "Mayo", "categoria": "Efeméride", "tema": "📅 Día Internacional de los Trabajadores de la Salud", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 5, "fecha": "2026-05-13", "dia": "Miércoles", "semana": "Sem 2", "mes": "Mayo", "categoria": "Actividad PIL", "tema": "Visita técnica a cliente del sector oil & gas – reforzando lazos comerciales", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 6, "fecha": "2026-05-15", "dia": "Viernes", "semana": "Sem 2", "mes": "Mayo", "categoria": "Proyecto/Servicio", "tema": "Servicio de ingeniería eléctrica industrial: ¿qué incluye y cómo contratarlo?", "formato": "Carrusel / Flyer", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 7, "fecha": "2026-05-18", "dia": "Lunes", "semana": "Sem 3", "mes": "Mayo", "categoria": "Noticia Web", "tema": "Telecomunicaciones industriales: cómo integrarlas a tus sistemas de control", "formato": "Imagen + Link al artículo", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 8, "fecha": "2026-05-20", "dia": "Miércoles", "semana": "Sem 3", "mes": "Mayo", "categoria": "Actividad PIL", "tema": "Charla interna: Tendencias en automatización industrial 2026", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 9, "fecha": "2026-05-22", "dia": "Viernes", "semana": "Sem 3", "mes": "Mayo", "categoria": "Proyecto/Servicio", "tema": "Caso de éxito: Instalación de sistema SCADA en planta de procesamiento", "formato": "Galería / Infografía", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 10, "fecha": "2026-05-25", "dia": "Lunes", "semana": "Sem 4", "mes": "Mayo", "categoria": "Efeméride", "tema": "📅 Día de la Educación Técnica – PIL Perú y el valor del conocimiento técnico", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 11, "fecha": "2026-05-27", "dia": "Miércoles", "semana": "Sem 4", "mes": "Mayo", "categoria": "Actividad PIL", "tema": "Evento de integración de equipos PIL – trabajo en campo y cultura corporativa", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 12, "fecha": "2026-05-29", "dia": "Viernes", "semana": "Sem 4", "mes": "Mayo", "categoria": "Proyecto/Servicio", "tema": "Promoción: Asesoría en instrumentación y control – conoce nuestro alcance de servicio", "formato": "Carrusel / Flyer", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 13, "fecha": "2026-06-01", "dia": "Lunes", "semana": "Sem 1", "mes": "Junio", "categoria": "Actividad PIL", "tema": "Capacitación técnica: Protocolos de comunicación industrial (Modbus, Profibus, Ethernet IP)", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 14, "fecha": "2026-06-03", "dia": "Miércoles", "semana": "Sem 1", "mes": "Junio", "categoria": "Noticia Web", "tema": "¿Cuánto cuesta un proyecto de automatización industrial en Perú?", "formato": "Imagen + Link al artículo", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 15, "fecha": "2026-06-05", "dia": "Viernes", "semana": "Sem 1", "mes": "Junio", "categoria": "Efeméride", "tema": "📅 Día Mundial del Medio Ambiente – Ingeniería sostenible desde PIL Perú", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 16, "fecha": "2026-06-08", "dia": "Lunes", "semana": "Sem 2", "mes": "Junio", "categoria": "Proyecto/Servicio", "tema": "Proyecto: Instalación de tableros de control en complejo industrial – Lima", "formato": "Carrusel de imágenes", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 17, "fecha": "2026-06-10", "dia": "Miércoles", "semana": "Sem 2", "mes": "Junio", "categoria": "Actividad PIL", "tema": "Visita a obra: Supervisión de avance en proyecto EPC sector minero", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 18, "fecha": "2026-06-12", "dia": "Viernes", "semana": "Sem 2", "mes": "Junio", "categoria": "Proyecto/Servicio", "tema": "Soluciones llave en mano PIL: desde el diseño hasta la puesta en marcha", "formato": "Carrusel / Flyer", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 19, "fecha": "2026-06-15", "dia": "Lunes", "semana": "Sem 3", "mes": "Junio", "categoria": "Noticia Web", "tema": "Tableros eléctricos industriales: qué especificaciones pedir antes de fabricar", "formato": "Imagen + Link al artículo", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 20, "fecha": "2026-06-17", "dia": "Miércoles", "semana": "Sem 3", "mes": "Junio", "categoria": "Efeméride", "tema": "📅 Día del Padre – Reconocemos a los padres del equipo PIL Perú", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 21, "fecha": "2026-06-19", "dia": "Viernes", "semana": "Sem 3", "mes": "Junio", "categoria": "Actividad PIL", "tema": "Reunión de liderazgo PIL 2026: planificación estratégica del segundo semestre", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 22, "fecha": "2026-06-22", "dia": "Lunes", "semana": "Sem 4", "mes": "Junio", "categoria": "Noticia Web", "tema": "¿Qué es un proyecto llave en mano y cuándo conviene para la industria?", "formato": "Imagen + Link al artículo", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 23, "fecha": "2026-06-24", "dia": "Miércoles", "semana": "Sem 4", "mes": "Junio", "categoria": "Efeméride", "tema": "📅 Inti Raymi – Celebramos nuestra identidad cultural peruana", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 24, "fecha": "2026-06-26", "dia": "Viernes", "semana": "Sem 4", "mes": "Junio", "categoria": "Noticia Web", "tema": "Proyectos EPC en minería: errores al contratar un proveedor", "formato": "Imagen + Link al artículo", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 25, "fecha": "2026-06-29", "dia": "Lunes", "semana": "Sem 5", "mes": "Junio", "categoria": "Efeméride", "tema": "📅 San Pedro y San Pablo – Festividad nacional", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 26, "fecha": "2026-07-01", "dia": "Miércoles", "semana": "Sem 1", "mes": "Julio", "categoria": "Proyecto/Servicio", "tema": "Caso de éxito: Proyecto de automatización completado en planta concentradora", "formato": "Galería / Infografía", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 27, "fecha": "2026-07-03", "dia": "Viernes", "semana": "Sem 1", "mes": "Julio", "categoria": "Actividad PIL", "tema": "Capacitación: Seguridad en trabajos eléctricos bajo norma NFPA 70E", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 28, "fecha": "2026-07-06", "dia": "Lunes", "semana": "Sem 2", "mes": "Julio", "categoria": "Noticia Web", "tema": "Instrumentación y control en plantas de gas y petróleo: guía práctica", "formato": "Imagen + Link al artículo", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 29, "fecha": "2026-07-07", "dia": "Martes", "semana": "Sem 2", "mes": "Julio", "categoria": "Noticia Web", "tema": "SCADA en la industria peruana: qué evaluar antes de implementarlo", "formato": "Imagen + Link al artículo", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 30, "fecha": "2026-07-08", "dia": "Miércoles", "semana": "Sem 2", "mes": "Julio", "categoria": "Actividad PIL", "tema": "Visita técnica a cliente: evaluación de necesidades en infraestructura industrial", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 31, "fecha": "2026-07-10", "dia": "Viernes", "semana": "Sem 2", "mes": "Julio", "categoria": "Efeméride", "tema": "📅 Semana Previa a Fiestas Patrias – PIL Perú: ingeniería con orgullo peruano", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 32, "fecha": "2026-07-13", "dia": "Lunes", "semana": "Sem 3", "mes": "Julio", "categoria": "Proyecto/Servicio", "tema": "Portafolio de servicios PIL: Ingeniería eléctrica, automatización y telecomunicaciones", "formato": "Carrusel / Flyer", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 33, "fecha": "2026-07-20", "dia": "Lunes", "semana": "Sem 4", "mes": "Julio", "categoria": "Noticia Web", "tema": "Ingeniería eléctrica industrial: cómo elegir al proveedor correcto", "formato": "Imagen + Link al artículo", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 34, "fecha": "2026-07-22", "dia": "Miércoles", "semana": "Sem 4", "mes": "Julio", "categoria": "Actividad PIL", "tema": "Evento interno PIL: Reconocimiento a colaboradores destacados del primer semestre", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 35, "fecha": "2026-07-24", "dia": "Viernes", "semana": "Sem 4", "mes": "Julio", "categoria": "Efeméride", "tema": "📅 Fiestas Patrias – PIL Perú celebra el 205° aniversario de la independencia del Perú", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 36, "fecha": "2026-07-27", "dia": "Lunes", "semana": "Sem 5", "mes": "Julio", "categoria": "Noticia Web", "tema": "Construcciones industriales llave en mano: qué incluye y qué no", "formato": "Imagen + Link al artículo", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 37, "fecha": "2026-07-29", "dia": "Miércoles", "semana": "Sem 5", "mes": "Julio", "categoria": "Proyecto/Servicio", "tema": "Nuevo contrato adjudicado: Proyecto de instrumentación en planta de gas natural", "formato": "Carrusel de imágenes", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 38, "fecha": "2026-07-31", "dia": "Viernes", "semana": "Sem 5", "mes": "Julio", "categoria": "Actividad PIL", "tema": "Cierre de mes: balance de proyectos ejecutados en julio 2026", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 39, "fecha": "2026-08-03", "dia": "Lunes", "semana": "Sem 1", "mes": "Agosto", "categoria": "Noticia Web", "tema": "Automatización en minería: beneficios reales y casos de uso en Perú", "formato": "Imagen + Link al artículo", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 40, "fecha": "2026-08-05", "dia": "Miércoles", "semana": "Sem 1", "mes": "Agosto", "categoria": "Actividad PIL", "tema": "Capacitación: Mantenimiento preventivo de sistemas de control industrial", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 41, "fecha": "2026-08-07", "dia": "Viernes", "semana": "Sem 1", "mes": "Agosto", "categoria": "Proyecto/Servicio", "tema": "Proyecto ejecutado: Modernización de sistema eléctrico en planta industrial – Lima", "formato": "Galería / Infografía", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 42, "fecha": "2026-08-10", "dia": "Lunes", "semana": "Sem 2", "mes": "Agosto", "categoria": "Efeméride", "tema": "📅 Día Internacional de los Pueblos Indígenas – PIL Perú y la industria responsable", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 43, "fecha": "2026-08-12", "dia": "Miércoles", "semana": "Sem 2", "mes": "Agosto", "categoria": "Actividad PIL", "tema": "Visita a proyecto en ejecución: supervisión de montaje de tableros industriales", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 44, "fecha": "2026-08-14", "dia": "Viernes", "semana": "Sem 2", "mes": "Agosto", "categoria": "Proyecto/Servicio", "tema": "Servicio destacado: Soporte técnico y mantenimiento eléctrico industrial 24/7", "formato": "Carrusel / Flyer", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 45, "fecha": "2026-08-17", "dia": "Lunes", "semana": "Sem 3", "mes": "Agosto", "categoria": "Noticia Web", "tema": "¿Cuándo tercerizar el mantenimiento eléctrico industrial en tu planta?", "formato": "Imagen + Link al artículo", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 46, "fecha": "2026-08-19", "dia": "Miércoles", "semana": "Sem 3", "mes": "Agosto", "categoria": "Actividad PIL", "tema": "Evento de integración PIL: confraternidad y cultura de equipo", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 47, "fecha": "2026-08-21", "dia": "Viernes", "semana": "Sem 3", "mes": "Agosto", "categoria": "Proyecto/Servicio", "tema": "Caso de éxito: Implementación de red de telecomunicaciones en complejo minero", "formato": "Galería / Infografía", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 48, "fecha": "2026-08-24", "dia": "Lunes", "semana": "Sem 4", "mes": "Agosto", "categoria": "Efeméride", "tema": "📅 Día de la Bandera Peruana – PIL Perú: ingeniería hecha con orgullo nacional", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 49, "fecha": "2026-08-26", "dia": "Miércoles", "semana": "Sem 4", "mes": "Agosto", "categoria": "Actividad PIL", "tema": "Capacitación externa: normas IEC en sistemas de control y automatización", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 50, "fecha": "2026-08-28", "dia": "Viernes", "semana": "Sem 4", "mes": "Agosto", "categoria": "Proyecto/Servicio", "tema": "Servicios PIL: Construcciones industriales bajo estándar EPC – ¿qué significa para ti?", "formato": "Carrusel / Flyer", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 51, "fecha": "2026-09-02", "dia": "Miércoles", "semana": "Sem 1", "mes": "Septiembre", "categoria": "Actividad PIL", "tema": "Capacitación interna: Gestión de proyectos bajo metodología PMI", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 52, "fecha": "2026-09-04", "dia": "Viernes", "semana": "Sem 1", "mes": "Septiembre", "categoria": "Proyecto/Servicio", "tema": "Proyecto destacado: Automatización de subestación eléctrica en sector industrial", "formato": "Galería / Infografía", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 53, "fecha": "2026-09-07", "dia": "Lunes", "semana": "Sem 2", "mes": "Septiembre", "categoria": "Efeméride", "tema": "📅 Día del Ingeniero Peruano – PIL Perú reconoce el talento técnico nacional", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 54, "fecha": "2026-09-09", "dia": "Miércoles", "semana": "Sem 2", "mes": "Septiembre", "categoria": "Actividad PIL", "tema": "Visita técnica a cliente: evaluación de sistemas SCADA existentes para upgrade", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 55, "fecha": "2026-09-11", "dia": "Viernes", "semana": "Sem 2", "mes": "Septiembre", "categoria": "Proyecto/Servicio", "tema": "Servicio: Ingeniería de detalle para proyectos de instrumentación y control", "formato": "Carrusel / Flyer", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 56, "fecha": "2026-09-14", "dia": "Lunes", "semana": "Sem 3", "mes": "Septiembre", "categoria": "Efeméride", "tema": "📅 Semana de la Prevención de Accidentes – Seguridad primero en PIL Perú", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 57, "fecha": "2026-09-16", "dia": "Miércoles", "semana": "Sem 3", "mes": "Septiembre", "categoria": "Actividad PIL", "tema": "Evento PIL: Seminario de actualización tecnológica para el equipo técnico", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 58, "fecha": "2026-09-18", "dia": "Viernes", "semana": "Sem 3", "mes": "Septiembre", "categoria": "Proyecto/Servicio", "tema": "Caso de éxito: Proyecto llave en mano en planta de tratamiento de agua industrial", "formato": "Galería / Infografía", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 59, "fecha": "2026-09-21", "dia": "Lunes", "semana": "Sem 4", "mes": "Septiembre", "categoria": "Efeméride", "tema": "📅 Día Internacional de la Paz – PIL Perú: construyendo con responsabilidad social", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 60, "fecha": "2026-09-23", "dia": "Miércoles", "semana": "Sem 4", "mes": "Septiembre", "categoria": "Actividad PIL", "tema": "Capacitación: Nuevas tecnologías en sistemas de telecomunicaciones industriales", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 61, "fecha": "2026-09-25", "dia": "Viernes", "semana": "Sem 4", "mes": "Septiembre", "categoria": "Proyecto/Servicio", "tema": "Portafolio PIL: Proyectos en sectores minería, oil & gas e industria manufacturera", "formato": "Carrusel de imágenes", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 62, "fecha": "2026-09-28", "dia": "Lunes", "semana": "Sem 5", "mes": "Septiembre", "categoria": "Actividad PIL", "tema": "Balance del mes: logros, proyectos y aprendizajes del equipo PIL – Septiembre 2026", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 63, "fecha": "2026-10-02", "dia": "Viernes", "semana": "Sem 1", "mes": "Octubre", "categoria": "Efeméride", "tema": "📅 Día de los Animales – PIL Perú y el compromiso con el entorno", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 64, "fecha": "2026-10-05", "dia": "Lunes", "semana": "Sem 2", "mes": "Octubre", "categoria": "Proyecto/Servicio", "tema": "Proyecto ejecutado: Instalación de sistema de control PLC en planta de concentrados", "formato": "Galería / Infografía", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 65, "fecha": "2026-10-07", "dia": "Miércoles", "semana": "Sem 2", "mes": "Octubre", "categoria": "Efeméride", "tema": "📅 Aniversario Batalla de Angamos – Orgullo peruano desde PIL Perú", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 66, "fecha": "2026-10-09", "dia": "Viernes", "semana": "Sem 2", "mes": "Octubre", "categoria": "Actividad PIL", "tema": "Capacitación: Fundamentos de redes industriales y ciberseguridad OT", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 67, "fecha": "2026-10-12", "dia": "Lunes", "semana": "Sem 3", "mes": "Octubre", "categoria": "Proyecto/Servicio", "tema": "Servicio PIL: ¿Cómo abordamos un proyecto EPC desde la ingeniería básica?", "formato": "Carrusel / Flyer", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 68, "fecha": "2026-10-14", "dia": "Miércoles", "semana": "Sem 3", "mes": "Octubre", "categoria": "Actividad PIL", "tema": "Visita a proyecto: Supervisión de pruebas FAT en tableros de media tensión", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 69, "fecha": "2026-10-16", "dia": "Viernes", "semana": "Sem 3", "mes": "Octubre", "categoria": "Efeméride", "tema": "📅 Día Mundial de la Alimentación – PIL Perú en proyectos del sector agroindustrial", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 70, "fecha": "2026-10-19", "dia": "Lunes", "semana": "Sem 4", "mes": "Octubre", "categoria": "Proyecto/Servicio", "tema": "Nuevo proyecto adjudicado: Sistema de instrumentación en planta petroquímica", "formato": "Carrusel de imágenes", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 71, "fecha": "2026-10-21", "dia": "Miércoles", "semana": "Sem 4", "mes": "Octubre", "categoria": "Actividad PIL", "tema": "Evento: Participación de PIL Perú en feria de proveedores industriales", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 72, "fecha": "2026-10-23", "dia": "Viernes", "semana": "Sem 4", "mes": "Octubre", "categoria": "Proyecto/Servicio", "tema": "Caso de éxito: Proyecto de telecomunicaciones en mina subterránea", "formato": "Galería / Infografía", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 73, "fecha": "2026-10-28", "dia": "Miércoles", "semana": "Sem 5", "mes": "Octubre", "categoria": "Actividad PIL", "tema": "Capacitación técnica: Actualización en normativas eléctricas CNE-Perú 2026", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 74, "fecha": "2026-10-30", "dia": "Viernes", "semana": "Sem 5", "mes": "Octubre", "categoria": "Efeméride", "tema": "📅 Víspera de Todos los Santos – Mensaje corporativo de PIL Perú", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 75, "fecha": "2026-11-02", "dia": "Lunes", "semana": "Sem 1", "mes": "Noviembre", "categoria": "Proyecto/Servicio", "tema": "Proyecto PIL: Instalación de sistema de videovigilancia industrial IP en planta minera", "formato": "Galería / Infografía", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 76, "fecha": "2026-11-04", "dia": "Miércoles", "semana": "Sem 1", "mes": "Noviembre", "categoria": "Actividad PIL", "tema": "Capacitación: Manejo seguro de equipos de alta tensión – equipo técnico PIL", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 77, "fecha": "2026-11-06", "dia": "Viernes", "semana": "Sem 1", "mes": "Noviembre", "categoria": "Efeméride", "tema": "📅 Semana de la Ciencia y Tecnología – PIL Perú: innovación al servicio de la industria", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 78, "fecha": "2026-11-09", "dia": "Lunes", "semana": "Sem 2", "mes": "Noviembre", "categoria": "Proyecto/Servicio", "tema": "Servicio: Auditoría de sistemas eléctricos industriales – previene antes que corregir", "formato": "Carrusel / Flyer", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 79, "fecha": "2026-11-11", "dia": "Miércoles", "semana": "Sem 2", "mes": "Noviembre", "categoria": "Actividad PIL", "tema": "Visita a obra: Avance del proyecto de automatización en complejo industrial costero", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 80, "fecha": "2026-11-13", "dia": "Viernes", "semana": "Sem 2", "mes": "Noviembre", "categoria": "Efeméride", "tema": "📅 Día de la Lealtad – Valores que guían al equipo PIL Perú", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 81, "fecha": "2026-11-16", "dia": "Lunes", "semana": "Sem 3", "mes": "Noviembre", "categoria": "Proyecto/Servicio", "tema": "Proyecto destacado: Red de fibra óptica industrial para complejo minero en Cusco", "formato": "Galería / Infografía", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 82, "fecha": "2026-11-18", "dia": "Miércoles", "semana": "Sem 3", "mes": "Noviembre", "categoria": "Actividad PIL", "tema": "Evento: Reunión anual de planificación estratégica PIL Perú 2027", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 83, "fecha": "2026-11-20", "dia": "Viernes", "semana": "Sem 3", "mes": "Noviembre", "categoria": "Efeméride", "tema": "📅 Día Universal del Niño – PIL Perú con responsabilidad social empresarial", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 84, "fecha": "2026-11-23", "dia": "Lunes", "semana": "Sem 4", "mes": "Noviembre", "categoria": "Proyecto/Servicio", "tema": "Servicio PIL: Construcción de salas eléctricas bajo estándar IEC – casos ejecutados", "formato": "Carrusel de imágenes", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 85, "fecha": "2026-11-25", "dia": "Miércoles", "semana": "Sem 4", "mes": "Noviembre", "categoria": "Actividad PIL", "tema": "Capacitación final del año: Gestión de activos y confiabilidad industrial", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 86, "fecha": "2026-11-27", "dia": "Viernes", "semana": "Sem 4", "mes": "Noviembre", "categoria": "Efeméride", "tema": "📅 Día de la Solidaridad – PIL Perú: comprometidos con las comunidades donde operamos", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 87, "fecha": "2026-12-02", "dia": "Miércoles", "semana": "Sem 1", "mes": "Diciembre", "categoria": "Proyecto/Servicio", "tema": "Balance de proyectos 2026: lo que logramos este año en ingeniería e innovación", "formato": "Carrusel de imágenes", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 88, "fecha": "2026-12-04", "dia": "Viernes", "semana": "Sem 1", "mes": "Diciembre", "categoria": "Actividad PIL", "tema": "Evento de cierre de año PIL Perú: celebrando los logros del equipo", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 89, "fecha": "2026-12-07", "dia": "Lunes", "semana": "Sem 2", "mes": "Diciembre", "categoria": "Efeméride", "tema": "📅 Día de la Inmaculada Concepción – Mensaje de PIL Perú", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 90, "fecha": "2026-12-09", "dia": "Miércoles", "semana": "Sem 2", "mes": "Diciembre", "categoria": "Efeméride", "tema": "📅 Batalla de Ayacucho – 202° aniversario de la independencia latinoamericana", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 91, "fecha": "2026-12-11", "dia": "Viernes", "semana": "Sem 2", "mes": "Diciembre", "categoria": "Proyecto/Servicio", "tema": "Proyecciones 2027: ¿En qué sectores continuará creciendo PIL Perú?", "formato": "Carrusel / Flyer", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 92, "fecha": "2026-12-14", "dia": "Lunes", "semana": "Sem 3", "mes": "Diciembre", "categoria": "Actividad PIL", "tema": "Reconocimiento interno: colaboradores del año PIL Perú 2026", "formato": "Foto + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 93, "fecha": "2026-12-16", "dia": "Miércoles", "semana": "Sem 3", "mes": "Diciembre", "categoria": "Proyecto/Servicio", "tema": "Servicio de consultoría PIL: acompañamos tu proyecto desde la idea hasta la operación", "formato": "Carrusel / Flyer", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 94, "fecha": "2026-12-18", "dia": "Viernes", "semana": "Sem 3", "mes": "Diciembre", "categoria": "Actividad PIL", "tema": "PIL Perú en números 2026: proyectos, clientes y crecimiento del equipo", "formato": "Infografía", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 95, "fecha": "2026-12-21", "dia": "Lunes", "semana": "Sem 4", "mes": "Diciembre", "categoria": "Efeméride", "tema": "📅 Inicio del Verano – Mensaje de bienestar del equipo PIL Perú", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 96, "fecha": "2026-12-23", "dia": "Miércoles", "semana": "Sem 4", "mes": "Diciembre", "categoria": "Actividad PIL", "tema": "Mensaje de Navidad PIL Perú: gracias a clientes, socios y colaboradores", "formato": "Video / Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 97, "fecha": "2026-12-25", "dia": "Viernes", "semana": "Sem 4", "mes": "Diciembre", "categoria": "Efeméride", "tema": "📅 Navidad – Felices Fiestas desde PIL Perú", "formato": "Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}, {"n": 98, "fecha": "2026-12-30", "dia": "Miércoles", "semana": "Sem 5", "mes": "Diciembre", "categoria": "Actividad PIL", "tema": "Despedida de año: PIL Perú agradece y se proyecta al 2027 con fuerza", "formato": "Video / Imagen + Copy", "red": "LinkedIn / Facebook", "estado": "Pendiente", "obs": ""}];
+
+const CAT_COLORS = {
+  'Efeméride':        'cat-efemeride',
+  'Actividad PIL':    'cat-actividad',
+  'Proyecto/Servicio':'cat-proyecto',
+  'Noticia Web':      'cat-noticia'
+};
+
+const CAT_DOTS = {
+  'Efeméride':        '#f59e0b',
+  'Actividad PIL':    '#3b82f6',
+  'Proyecto/Servicio':'#10b981',
+  'Noticia Web':      '#a855f7'
+};
+
+const EST_COLORS = {
+  'Pendiente':  'est-pendiente',
+  'Publicado':  'est-publicado',
+  'En proceso': 'est-proceso'
+};
+
+function fmt(fecha) {
+  if(!fecha) return '—';
+  const p = fecha.split('-');
+  return p[2]+'/'+p[1]+'/'+p[0];
+}
+
+// ── Toast notification ──────────────────────────────────────────────────────
+function gToast(msg, type='ok', duration=3000) {
+  let t = document.getElementById('gtoast');
+  if(!t){ t=document.createElement('div'); t.id='gtoast'; t.className='gtoast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.className = `gtoast ${type}`;
+  requestAnimationFrame(()=>{ t.classList.add('show'); });
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>{ t.classList.remove('show'); }, duration);
+}
+
+// ── Sheets write helper ────────────────────────────────────────────────────
+async function sheetsWrite(payload) {
+  const res = await fetch(AS_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  return res.json();
+}
+
+// ── Stats bar ──────────────────────────────────────────────────────────────
+function buildGrillaStats() {
+  const byCat = {};
+  GRILLA_POSTS.forEach(p => { byCat[p.categoria] = (byCat[p.categoria]||0)+1; });
+  const total = GRILLA_POSTS.length;
+  return `<div class="grilla-stats">
+    ${Object.entries(byCat).map(([cat,n])=>`
+    <div class="gstat">
+      <div class="gstat-dot" style="background:${CAT_DOTS[cat]||'#888'}"></div>
+      <div class="gstat-info"><div class="gstat-num">${n}</div><div class="gstat-lbl">${cat}</div></div>
+    </div>`).join('')}
+    <div class="gstat" style="margin-left:auto">
+      <div class="gstat-dot" style="background:#0f2d5e"></div>
+      <div class="gstat-info"><div class="gstat-num">${total}</div><div class="gstat-lbl">Total 2026</div></div>
+    </div>
+  </div>`;
+}
+
+// ── Main render ────────────────────────────────────────────────────────────
+function renderGrilla() {
+  const filterMes = document.getElementById('gf-mes')?.value || '';
+  const filterCat = document.getElementById('gf-cat')?.value || '';
+  const filterEst = document.getElementById('gf-est')?.value || '';
+  const filterTxt = (document.getElementById('gf-txt')?.value || '').toLowerCase().trim();
+
+  const filtered = GRILLA_POSTS.filter(p => {
+    if(filterMes && p.mes !== filterMes) return false;
+    if(filterCat && p.categoria !== filterCat) return false;
+    if(filterEst && p.estado !== filterEst) return false;
+    if(filterTxt && !p.tema.toLowerCase().includes(filterTxt) &&
+       !p.categoria.toLowerCase().includes(filterTxt) &&
+       !p.formato.toLowerCase().includes(filterTxt)) return false;
+    return true;
+  });
+
+  let lastMes = null, rows = '';
+  filtered.forEach(p => {
+    if(p.mes !== lastMes) {
+      rows += `<tr class="month-divider"><td colspan="9">📅 ${p.mes}</td></tr>`;
+      lastMes = p.mes;
+    }
+    const catCls = CAT_COLORS[p.categoria]||'';
+    const estCls = EST_COLORS[p.estado]||'';
+    rows += `<tr>
+      <td style="font-weight:600;color:#0f2d5e;width:34px">${p.n}</td>
+      <td style="white-space:nowrap;color:#555">${fmt(p.fecha)}<br><span style="font-size:10px;color:#bbb">${p.dia}</span></td>
+      <td style="max-width:300px;line-height:1.45">${p.tema}</td>
+      <td><span class="cat-badge ${catCls}">${p.categoria}</span></td>
+      <td style="color:#777;white-space:nowrap;font-size:11px">${p.formato}</td>
+      <td style="color:#888;white-space:nowrap;font-size:11px">LI / FB</td>
+      <td style="white-space:nowrap">
+        <button class="est-badge ${estCls}" id="est-btn-${p.n}"
+          onclick="confirmEstado(${p.n})"
+          title="Clic para cambiar estado">${p.estado}</button>
+      </td>
+      <td style="color:#bbb;font-size:11px">${p.semana}</td>
+      <td>
+        <div class="row-actions">
+          <button class="act-btn act-edit" onclick="openEditModal(${p.n})" title="Editar publicación">✏️</button>
+          <button class="act-btn act-del"  onclick="confirmDelete(${p.n})" title="Eliminar publicación">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+  });
+
+  document.getElementById('pane-grilla').innerHTML = `
+  <div class="sec">Grilla de Contenidos — PIL Perú 2026</div>
+  ${buildGrillaStats()}
+  <div class="grilla-toolbar">
+    <span class="grilla-toolbar-title">Filtros</span>
+    <select class="gf-select" id="gf-mes" onchange="renderGrilla()">
+      <option value="">Todos los meses</option>
+      ${['Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+        .map(m=>`<option value="${m}" ${filterMes===m?'selected':''}>${m}</option>`).join('')}
+    </select>
+    <select class="gf-select" id="gf-cat" onchange="renderGrilla()">
+      <option value="">Todas las categorías</option>
+      ${['Efeméride','Actividad PIL','Proyecto/Servicio','Noticia Web']
+        .map(c=>`<option value="${c}" ${filterCat===c?'selected':''}>${c}</option>`).join('')}
+    </select>
+    <select class="gf-select" id="gf-est" onchange="renderGrilla()">
+      <option value="">Todos los estados</option>
+      ${['Pendiente','En proceso','Publicado']
+        .map(e=>`<option value="${e}" ${filterEst===e?'selected':''}>${e}</option>`).join('')}
+    </select>
+    <input class="gf-input" id="gf-txt" type="text"
+      placeholder="🔍 Buscar por tema, formato..."
+      value="${filterTxt}" oninput="renderGrilla()">
+    <button class="gf-btn gf-btn-clear" onclick="clearGrillaFilters()">✕ Limpiar</button>
+    <button class="gf-btn gf-btn-add" onclick="openAddModal()">＋ Nueva publicación</button>
+  </div>
+  <div class="grilla-count">Mostrando <b>${filtered.length}</b> de <b>${GRILLA_POSTS.length}</b> publicaciones</div>
+  ${filtered.length === 0
+    ? `<div class="grilla-no-results">🔍 No se encontraron publicaciones con los filtros aplicados.</div>`
+    : `<div class="grilla-table-wrap">
+        <table class="grilla-table">
+          <thead><tr>
+            <th>#</th><th>Fecha</th><th>Tema / Contenido</th><th>Categoría</th>
+            <th>Formato</th><th>Redes</th><th>Estado</th><th>Semana</th><th>Acciones</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`}
+  ${grillaMod()}`;
+}
+
+// ── Modal HTML template ────────────────────────────────────────────────────
+function grillaMod() {
+  return `
+  <!-- Edit/Add Modal -->
+  <div class="gmodal-bg hidden" id="gmodal-bg">
+    <div class="gmodal">
+      <button class="gmodal-close" onclick="closeModal()">✕</button>
+      <div class="gmodal-title" id="gmodal-title">✏️ Editar publicación</div>
+      <input type="hidden" id="gm-n">
+      <div class="gfield-row">
+        <div class="gfield">
+          <label>Fecha</label>
+          <input type="date" id="gm-fecha">
+        </div>
+        <div class="gfield">
+          <label>Mes</label>
+          <select id="gm-mes">
+            ${['Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+              .map(m=>`<option>${m}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="gfield">
+        <label>Tema / Contenido</label>
+        <textarea id="gm-tema" rows="3"></textarea>
+      </div>
+      <div class="gfield-row">
+        <div class="gfield">
+          <label>Categoría</label>
+          <select id="gm-cat">
+            ${['Efeméride','Actividad PIL','Proyecto/Servicio','Noticia Web']
+              .map(c=>`<option>${c}</option>`).join('')}
+          </select>
+        </div>
+        <div class="gfield">
+          <label>Estado</label>
+          <select id="gm-est">
+            <option>Pendiente</option>
+            <option>En proceso</option>
+            <option>Publicado</option>
+          </select>
+        </div>
+      </div>
+      <div class="gfield-row">
+        <div class="gfield">
+          <label>Formato</label>
+          <select id="gm-formato">
+            ${['Imagen + Copy','Foto + Copy','Carrusel de imágenes','Carrusel / Flyer',
+               'Imagen + Link al artículo','Galería / Infografía','Video / Imagen + Copy','Infografía']
+              .map(f=>`<option>${f}</option>`).join('')}
+          </select>
+        </div>
+        <div class="gfield">
+          <label>Semana</label>
+          <select id="gm-semana">
+            ${['Sem 1','Sem 2','Sem 3','Sem 4','Sem 5'].map(s=>`<option>${s}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="gfield">
+        <label>Observaciones (opcional)</label>
+        <input type="text" id="gm-obs" placeholder="Notas adicionales...">
+      </div>
+      <div class="gmodal-footer">
+        <button class="gbtn gbtn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="gbtn gbtn-save" onclick="saveModal()">💾 Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+  <!-- Confirm Modal -->
+  <div class="gmodal-bg hidden" id="gconfirm-bg">
+    <div class="gmodal" style="max-width:420px">
+      <div class="gmodal-title" id="gconfirm-title">⚠️ Confirmar acción</div>
+      <div class="gconfirm-msg" id="gconfirm-msg"></div>
+      <div class="gconfirm-detail" id="gconfirm-detail"></div>
+      <div class="gmodal-footer">
+        <button class="gbtn gbtn-cancel" onclick="closeConfirm()">Cancelar</button>
+        <button class="gbtn" id="gconfirm-ok-btn" onclick="confirmOk()">Confirmar</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Modal helpers ──────────────────────────────────────────────────────────
+let _confirmAction = null;
+
+function openModal(){ document.getElementById('gmodal-bg').classList.remove('hidden'); }
+function closeModal(){ document.getElementById('gmodal-bg').classList.add('hidden'); }
+function openConfirm(title, msg, detail, btnLabel, btnCls, action){
+  document.getElementById('gconfirm-title').textContent = title;
+  document.getElementById('gconfirm-msg').textContent = msg;
+  document.getElementById('gconfirm-detail').textContent = detail;
+  const btn = document.getElementById('gconfirm-ok-btn');
+  btn.textContent = btnLabel;
+  btn.className = `gbtn ${btnCls}`;
+  _confirmAction = action;
+  document.getElementById('gconfirm-bg').classList.remove('hidden');
+}
+function closeConfirm(){ document.getElementById('gconfirm-bg').classList.add('hidden'); _confirmAction=null; }
+function confirmOk(){ closeConfirm(); if(_confirmAction) _confirmAction(); }
+
+// ── Open EDIT modal ────────────────────────────────────────────────────────
+function openEditModal(n) {
+  const p = GRILLA_POSTS.find(x=>x.n===n);
+  if(!p) return;
+  document.getElementById('gmodal-title').textContent = `✏️ Editar publicación #${p.n}`;
+  document.getElementById('gm-n').value = p.n;
+  document.getElementById('gm-fecha').value = p.fecha || '';
+  document.getElementById('gm-mes').value = p.mes;
+  document.getElementById('gm-tema').value = p.tema;
+  document.getElementById('gm-cat').value = p.categoria;
+  document.getElementById('gm-est').value = p.estado;
+  document.getElementById('gm-formato').value = p.formato;
+  document.getElementById('gm-semana').value = p.semana;
+  document.getElementById('gm-obs').value = p.obs || '';
+  openModal();
+}
+
+// ── Open ADD modal ─────────────────────────────────────────────────────────
+function openAddModal() {
+  document.getElementById('gmodal-title').textContent = '＋ Nueva publicación';
+  document.getElementById('gm-n').value = '';
+  document.getElementById('gm-fecha').value = '';
+  document.getElementById('gm-mes').value = 'Mayo';
+  document.getElementById('gm-tema').value = '';
+  document.getElementById('gm-cat').value = 'Actividad PIL';
+  document.getElementById('gm-est').value = 'Pendiente';
+  document.getElementById('gm-formato').value = 'Foto + Copy';
+  document.getElementById('gm-semana').value = 'Sem 1';
+  document.getElementById('gm-obs').value = '';
+  openModal();
+}
+
+// ── Save modal ─────────────────────────────────────────────────────────────
+async function saveModal() {
+  const n     = document.getElementById('gm-n').value;
+  const fecha = document.getElementById('gm-fecha').value;
+  const mes   = document.getElementById('gm-mes').value;
+  const tema  = document.getElementById('gm-tema').value.trim();
+  const cat   = document.getElementById('gm-cat').value;
+  const est   = document.getElementById('gm-est').value;
+  const fmt2  = document.getElementById('gm-formato').value;
+  const sem   = document.getElementById('gm-semana').value;
+  const obs   = document.getElementById('gm-obs').value.trim();
+
+  if(!tema){ gToast('El campo Tema es obligatorio','err'); return; }
+
+  const btn = document.querySelector('#gmodal-bg .gbtn-save');
+  btn.textContent = '⏳ Guardando...'; btn.disabled = true;
+
+  if(n) {
+    // EDIT existing
+    const p = GRILLA_POSTS.find(x=>x.n===parseInt(n));
+    if(p){
+      p.fecha=fecha; p.mes=mes; p.tema=tema;
+      p.categoria=cat; p.estado=est; p.formato=fmt2;
+      p.semana=sem; p.obs=obs;
+      // Sync all changed fields to Sheets
+      if(p._sheetRow) {
+        try {
+          await sheetsWrite({sheet:'Grilla_Contenidos', row:p._sheetRow, col:2,  value:fecha});
+          await sheetsWrite({sheet:'Grilla_Contenidos', row:p._sheetRow, col:5,  value:mes});
+          await sheetsWrite({sheet:'Grilla_Contenidos', row:p._sheetRow, col:6,  value:cat});
+          await sheetsWrite({sheet:'Grilla_Contenidos', row:p._sheetRow, col:7,  value:tema});
+          await sheetsWrite({sheet:'Grilla_Contenidos', row:p._sheetRow, col:8,  value:fmt2});
+          await sheetsWrite({sheet:'Grilla_Contenidos', row:p._sheetRow, col:10, value:est});
+          await sheetsWrite({sheet:'Grilla_Contenidos', row:p._sheetRow, col:12, value:obs});
+          gToast(`✓ Publicación #${n} actualizada en Sheets`,'ok');
+        } catch(e){ gToast('Cambios guardados localmente (error Sheets)','warn'); }
+      } else {
+        gToast(`✓ Publicación #${n} actualizada (sin fila Sheets)`, 'warn');
+      }
+    }
+  } else {
+    // ADD new
+    const maxN = GRILLA_POSTS.length ? Math.max(...GRILLA_POSTS.map(x=>x.n)) : 0;
+    const newPost = { n:maxN+1, fecha, mes, dia:'', semana:sem,
+      categoria:cat, tema, formato:fmt2, red:'LinkedIn / Facebook',
+      estado:est, obs, _sheetRow:null };
+    GRILLA_POSTS.push(newPost);
+    // Append row to Sheets
+    try {
+      await sheetsWrite({
+        sheet:'Grilla_Contenidos', action:'append',
+        values:[newPost.n, fecha, '', sem, mes, cat, tema, fmt2, 'LinkedIn / Facebook', est, '', obs]
+      });
+      gToast(`✓ Nueva publicación #${newPost.n} agregada`,'ok');
+    } catch(e){ gToast('Publicación agregada localmente (error Sheets)','warn'); }
+  }
+
+  btn.textContent='💾 Guardar cambios'; btn.disabled=false;
+  closeModal();
+  renderGrilla();
+}
+
+// ── Estado change with confirm ─────────────────────────────────────────────
+function confirmEstado(n) {
+  const p = GRILLA_POSTS.find(x=>x.n===n);
+  if(!p) return;
+  const estados = ['Pendiente','En proceso','Publicado'];
+  const next = estados[(estados.indexOf(p.estado)+1) % estados.length];
+  openConfirm(
+    '🔄 Cambiar estado',
+    `¿Cambiar el estado de esta publicación?`,
+    `#${p.n} — ${p.tema.substring(0,70)}...\n\n${p.estado}  →  ${next}`,
+    `Cambiar a "${next}"`,
+    next==='Publicado'?'gbtn-save':next==='En proceso'?'gbtn-save':'gbtn-cancel',
+    async ()=>{
+      const btn = document.getElementById(`est-btn-${n}`);
+      if(btn){ btn.classList.add('est-saving'); }
+      p.estado = next;
+      if(p._sheetRow){
+        try {
+          await sheetsWrite({sheet:'Grilla_Contenidos', row:p._sheetRow, col:10, value:next});
+          gToast(`✓ Estado actualizado: "${next}"`, 'ok');
+        } catch(e){ gToast('Estado actualizado localmente', 'warn'); }
+      } else {
+        gToast(`✓ Estado cambiado a "${next}"`, 'ok');
+      }
+      renderGrilla();
+    }
+  );
+}
+
+// ── Delete with confirm ────────────────────────────────────────────────────
+function confirmDelete(n) {
+  const p = GRILLA_POSTS.find(x=>x.n===n);
+  if(!p) return;
+  openConfirm(
+    '🗑️ Eliminar publicación',
+    '¿Estás seguro de que deseas eliminar esta publicación?',
+    `#${p.n} — ${p.tema}\nFecha: ${fmt(p.fecha)} · ${p.mes} · ${p.categoria}`,
+    'Sí, eliminar',
+    'gbtn-del',
+    async ()=>{
+      const idx = GRILLA_POSTS.findIndex(x=>x.n===n);
+      GRILLA_POSTS.splice(idx,1);
+      if(p._sheetRow){
+        try {
+          await sheetsWrite({sheet:'Grilla_Contenidos', action:'deleteRow', row:p._sheetRow});
+          gToast(`🗑️ Publicación #${n} eliminada de Sheets`, 'ok');
+        } catch(e){ gToast('Eliminado localmente (error Sheets)', 'warn'); }
+      } else {
+        gToast(`🗑️ Publicación #${n} eliminada`, 'ok');
+      }
+      renderGrilla();
+    }
+  );
+}
+
+function clearGrillaFilters() {
+  document.getElementById('gf-mes').value = '';
+  document.getElementById('gf-cat').value = '';
+  document.getElementById('gf-est').value = '';
+  document.getElementById('gf-txt').value = '';
+  renderGrilla();
+}
+
+
+
+loadAll();
+
+</script>
+<div class="tip-box" id="tipBox"></div>
+
+<script>
+// ── Tooltip system ────────────────────────────────────────────────────────
+const tipBox = document.getElementById('tipBox');
+
+document.addEventListener('click', function(e) {
+  const tip = e.target.closest('.tip');
+  if(tip) {
+    e.stopPropagation();
+    const text = tip.getAttribute('data-tip');
+    if(!text) return;
+    tipBox.textContent = text;
+    tipBox.classList.add('visible');
+    // position:fixed so use getBoundingClientRect directly (no scroll offset)
+    const rect = tip.getBoundingClientRect();
+    let left = rect.left;
+    let top  = rect.bottom + 8;
+    const boxW = 250;
+    if(left + boxW > window.innerWidth - 10) left = window.innerWidth - boxW - 10;
+    if(left < 10) left = 10;
+    if(top + 80 > window.innerHeight) top = rect.top - 80;
+    tipBox.style.left = left + 'px';
+    tipBox.style.top  = top + 'px';
+  } else {
+    tipBox.classList.remove('visible');
+  }
+});
+
+document.addEventListener('scroll', function() {
+  tipBox.classList.remove('visible');
+}, true);
+</script>
+</body>
+</html>
